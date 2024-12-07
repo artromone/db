@@ -3,6 +3,7 @@
         <file>main.qml</file>
         <file>Login.qml</file>
         <file>Menuu.qml</file>
+        <file>Logger.qml</file>
         <file>EmployeeForm.qml</file>
         <file>DepartmentForm.qml</file>
         <file>ProjectForm.qml</file>

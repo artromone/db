@@ -1,29 +1,37 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
+import QtQuick 2.1
+import QtQuick.Controls 2.1
 
 Item {
+    signal navigateBack
+
     Column {
-        anchors.centerIn: parent
+        anchors.centerIn: root
         spacing: 10
 
         TextField {
             id: departmentName
+
             placeholderText: "Department Name"
         }
-
         Button {
             text: "Add Department"
-            onClicked: console.log("Department added: " + departmentName.text)
-        }
 
+            onClicked: logger.log("Department added: " + departmentName.text)
+        }
         Button {
             text: "Edit Department"
-            onClicked: console.log("Department edited")
-        }
 
+            onClicked: logger.log("Department edited")
+        }
         Button {
             text: "Delete Department"
-            onClicked: console.log("Department deleted")
+
+            onClicked: logger.log("Department deleted")
+        }
+        Button {
+            text: "Back"
+
+            onClicked: navigateBack()
         }
     }
 }

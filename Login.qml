@@ -2,6 +2,7 @@ import QtQuick 2.1
 import QtQuick.Controls 2.1
 
 Item {
+    signal loginFailed
     signal loginSuccess
 
     Column {
@@ -10,22 +11,24 @@ Item {
 
         TextField {
             id: username
+
             placeholderText: "Username"
         }
-
         TextField {
             id: password
-            placeholderText: "Password"
-            echoMode: TextInput.Password
-        }
 
+            echoMode: TextInput.Password
+            placeholderText: "Password"
+        }
         Button {
             text: "Login"
+
             onClicked: {
                 if (username.text === "admin" && password.text === "1234") {
-                    loginSuccess()
+                    loginSuccess();
                 } else {
-                    console.log("Invalid credentials")
+                    loginFailed();
+                    // console.log("Invalid credentials")
                 }
             }
         }
