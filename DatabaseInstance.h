@@ -29,7 +29,9 @@ private:
         QString username = settings.value("Database/username", "").toString();
         QString password = settings.value("Database/password", "").toString();
 
-        QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+        // QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+        QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
+
         db.setHostName(host);
         db.setPort(port);
         db.setDatabaseName(dbName);

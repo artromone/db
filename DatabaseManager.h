@@ -37,8 +37,8 @@ public:
     Q_INVOKABLE bool addProject(const QString& name,
                                 int cost,
                                 int departmentId,
-                                const QDateTime& begDate,
-                                const QDateTime& endDate);
+                                const QString& begDate,
+                                const QString& endDate);
     Q_INVOKABLE bool deleteProject(int projectId);
 
     Q_INVOKABLE QVariantMap getTableMetadata(const QString& tableName);

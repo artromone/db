@@ -84,10 +84,6 @@ AuthManager::AuthManager(QObject* parent)
     setUserPasswords("admin", "user");
 }
 
-void AuthManager::createUserTableIfNotExists(const QString& scriptFileName)
-{
-}
-
 void AuthManager::setUserPasswords(const QString& adminPassword, const QString& operatorPassword)
 {
     QByteArray adminHashedPassword =

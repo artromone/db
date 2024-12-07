@@ -151,6 +151,7 @@ QList<QVariantMap> DatabaseManager::fetchEmployees()
         employee["position"] = query.value(3);
         employee["salary"] = query.value(4);
         employees.append(employee);
+        qDebug() << employee;
     }
     return employees;
 }
@@ -158,17 +159,18 @@ QList<QVariantMap> DatabaseManager::fetchEmployees()
 bool DatabaseManager::addProject(const QString& name,
                                  int cost,
                                  int departmentId,
-                                 const QDateTime& begDate,
-                                 const QDateTime& endDate)
+                                 const QString& begDate,
+                                 const QString& endDate)
 {
-    QString queryStr = QString(
-                           "INSERT INTO public.projects (name, cost, department_id, beg_date, "
-                           "end_date) VALUES ('%1', %2, %3, '%4', '%5')")
-                           .arg(name)
-                           .arg(cost)
-                           .arg(departmentId)
-                           .arg(begDate.toString(Qt::ISODate))
-                           .arg(endDate.toString(Qt::ISODate));
+    QString queryStr =
+        QString(
+            "INSERT INTO public.projects (name, cost, department_id, beg_date, "
+            "end_date) VALUES ('%1', %2, %3, '%4', '%5')")
+            .arg(name)
+            .arg(cost)
+            .arg(departmentId)
+            .arg(QDateTime::fromString(begDate, "dd.MM.yyyy HH:mm:ss").toString(Qt::ISODate))
+            .arg(QDateTime::fromString(endDate, "dd.MM.yyyy HH:mm:ss").toString(Qt::ISODate));
     if (executeQuery(queryStr))
     {
         emit projectAdded();

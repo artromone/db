@@ -12,7 +12,6 @@ public:
     explicit AuthManager(QObject* parent = nullptr);
     Q_INVOKABLE bool login(const QString& username, const QString& password);
     void provideAccessToDatabase(const QString& role);
-    void createUserTableIfNotExists(const QString& sqlFilePath);
     void setUserPasswords(const QString& adminPassword, const QString& operatorPassword);
 
 private:
