@@ -1,19 +1,26 @@
+#include <QDebug>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QQmlContext>
+#include <QtSql/QSqlDatabase>
 
-#include "DatabaseHandler.h"
+void setupDatabase()
+{
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName("database.db");
+    if (!db.open())
+    {
+        qFatal("Failed to connect to the database.");
+    }
+}
 
 int main(int argc, char* argv[])
 {
     QGuiApplication app(argc, argv);
 
+    setupDatabase();
+
     QQmlApplicationEngine engine;
-    const QUrl url("qrc:/Main.qml");
-
-    const auto dbhandler = new DatabaseHandler();
-    engine.rootContext()->setContextProperty("dbhandler", dbhandler);
-
+    const QUrl url(u"qrc:/main.qml"_qs);
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreated, &app,
         [url](QObject* obj, const QUrl& objUrl) {
@@ -21,7 +28,6 @@ int main(int argc, char* argv[])
                 QCoreApplication::exit(-1);
         },
         Qt::QueuedConnection);
-
     engine.load(url);
 
     return app.exec();

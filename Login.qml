@@ -1,32 +1,31 @@
-import QtQuick 2.1
-import QtQuick.Controls 2.1
+import QtQuick 2.15
+import QtQuick.Controls 2.15
 
 Item {
-    width: parent.width
-    height: parent.height
+    signal loginSuccess
 
     Column {
         anchors.centerIn: parent
+        spacing: 10
 
         TextField {
-            id: usernameField
-            placeholderText: "Логин"
+            id: username
+            placeholderText: "Username"
         }
 
         TextField {
-            id: passwordField
-            placeholderText: "Пароль"
+            id: password
+            placeholderText: "Password"
             echoMode: TextInput.Password
         }
 
         Button {
-            text: "Войти"
+            text: "Login"
             onClicked: {
-                var role = "";
-                if (dbhandler.authenticate(usernameField.text, passwordField.text, role)) {
-                    loader.source = "main.qml";
+                if (username.text === "admin" && password.text === "1234") {
+                    loginSuccess()
                 } else {
-                    console.log("Ошибка авторизации");
+                    console.log("Invalid credentials")
                 }
             }
         }
