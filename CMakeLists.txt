@@ -11,24 +11,25 @@ find_package(Qt5 5.11 REQUIRED COMPONENTS Core Gui Quick Sql QuickControls2)
 # Указываем путь к исходным файлам
 set(SOURCES
     main.cpp
-    DatabaseHandler.cpp
 )
 
 # Заголовочные файлы
 set(HEADERS
-    DatabaseHandler.h
 )
 
 # QML файлы
-set(QML_FILES
-    qml/main.qml
-    qml/Login.qml
-    qml/AddEditDialog.qml
-    qml/Reports.qml
-)
+# set(QML_FILES
+#         main.qml
+#         Login.qml
+#         Menu.qml
+#         EmployeeForm.qml
+#         DepartmentForm.qml
+#         ProjectForm.qml
+#         ReportView.qml
+# )
 
 # Указываем путь к файлу конфигурации
-configure_file(config.ini ${CMAKE_CURRENT_BINARY_DIR}/config.ini COPYONLY)
+# configure_file(config.ini ${CMAKE_CURRENT_BINARY_DIR}/config.ini COPYONLY)
 
 # Генерация ресурсов (если есть файлы qrc)
 qt5_add_resources(RESOURCES qml.qrc)

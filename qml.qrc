@@ -1,8 +1,11 @@
 <RCC>
     <qresource prefix="/">
-        <file>Main.qml</file>
+        <file>main.qml</file>
         <file>Login.qml</file>
-        <file>AddEditDialog.qml</file>
-        <file>Reports.qml</file>
+        <file>Menuu.qml</file>
+        <file>EmployeeForm.qml</file>
+        <file>DepartmentForm.qml</file>
+        <file>ProjectForm.qml</file>
+        <file>ReportView.qml</file>
     </qresource>
 </RCC>

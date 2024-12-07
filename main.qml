@@ -1,6 +1,5 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import DatabaseClient 1.0
+import QtQuick 2.1
+import QtQuick.Controls 2.1
 
 ApplicationWindow {
     visible: true
@@ -18,7 +17,7 @@ ApplicationWindow {
         }
     }
 
-    Menu {
+    Menuu {
         id: menuPage
         anchors.fill: parent
         visible: false
