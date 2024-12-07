@@ -12,9 +12,8 @@ class DatabaseManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit DatabaseManager(const QString& configFilePath = "config.ini");
+    explicit DatabaseManager();
     ~DatabaseManager();
-    QSqlDatabase& database() { return db_; }
 
     bool executeQuery(const QString& queryStr);
 
@@ -51,13 +50,6 @@ signals:
     void employeeDeleted();
     void projectAdded();
     void projectDeleted();
-
-public:
-    QString host_;
-    int port_;
-    QString dbName_;
-    QString username_;
-    QString password_;
 
 private:
     QSqlDatabase db_;

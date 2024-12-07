@@ -6,6 +6,7 @@
 #include <QtSql/QSqlQuery>
 
 #include "AuthManager.h"
+#include "DatabaseInstance.h"
 
 bool AuthManager::login(const QString& username, const QString& password)
 {
@@ -55,25 +56,7 @@ void AuthManager::provideAccessToDatabase(const QString& role)
 
 AuthManager::AuthManager(QObject* parent)
 {
-    QSettings settings("config.ini", QSettings::IniFormat);
-
-    auto host_ = settings.value("Database/host", "localhost").toString();
-    auto port_ = settings.value("Database/port", 5432).toInt();
-    auto dbName_ = settings.value("Database/databaseName", "").toString();
-    auto username_ = settings.value("Database/username", "").toString();
-    auto password_ = settings.value("Database/password", "").toString();
-
-    db_ = QSqlDatabase::addDatabase("QSQLITE");
-    db_.setHostName(host_);
-    db_.setPort(port_);
-    db_.setDatabaseName(dbName_);
-    db_.setUserName(username_);
-    db_.setPassword(password_);
-
-    if (!db_.open())
-    {
-        qFatal("Failed to open database: %s", qPrintable(db_.lastError().text()));
-    }
+    db_ = DatabaseInstance::getInstance();
 
     QFile scriptFile("users.sql");
     if (!scriptFile.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -87,7 +70,7 @@ AuthManager::AuthManager(QObject* parent)
     scriptFile.close();
 
     QStringList statements = script.split(";", QString::SkipEmptyParts);
-    QSqlQuery query;
+    QSqlQuery query(db_);
 
     for (const QString& statement : statements)
     {

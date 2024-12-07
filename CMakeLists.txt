@@ -21,6 +21,7 @@ set(HEADERS
     DatabaseManager.h
     AuthManager.h
     DateTimeValidator.h
+    DatabaseInstance.h
 )
 
 # QML файлы

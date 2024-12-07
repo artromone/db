@@ -1,34 +1,16 @@
 #include <QDebug>
 #include <QFile>
-#include <QSettings>
 #include <QTextStream>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlError>
 #include <QtSql/QSqlQuery>
 
+#include "DatabaseInstance.h"
 #include "DatabaseManager.h"
 
-DatabaseManager::DatabaseManager(const QString& configFilePath)
+DatabaseManager::DatabaseManager()
 {
-    QSettings settings(configFilePath, QSettings::IniFormat);
-
-    host_ = settings.value("Database/host", "localhost").toString();
-    port_ = settings.value("Database/port", 5432).toInt();
-    dbName_ = settings.value("Database/databaseName", "").toString();
-    username_ = settings.value("Database/username", "").toString();
-    password_ = settings.value("Database/password", "").toString();
-
-    db_ = QSqlDatabase::addDatabase("QSQLITE");
-    db_.setHostName(host_);
-    db_.setPort(port_);
-    db_.setDatabaseName(dbName_);
-    db_.setUserName(username_);
-    db_.setPassword(password_);
-
-    if (!db_.open())
-    {
-        qFatal("Failed to open database: %s", qPrintable(db_.lastError().text()));
-    }
+    db_ = DatabaseInstance::getInstance();
 }
 
 DatabaseManager::~DatabaseManager()
