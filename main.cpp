@@ -2,6 +2,8 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QtSql/QSqlDatabase>
+#include "DatabaseManager.h"
+#include "DateTimeValidator.h"
 
 void setupDatabase()
 {
@@ -16,6 +18,9 @@ void setupDatabase()
 int main(int argc, char* argv[])
 {
     QGuiApplication app(argc, argv);
+
+    qmlRegisterType<DatabaseManager>("DatabaseManager", 1, 0, "DatabaseManager");
+ qmlRegisterType<DateTimeValidator>("DateTimeValidator", 1, 0, "DateTimeValidator");
 
     setupDatabase();
 

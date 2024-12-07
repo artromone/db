@@ -1,5 +1,6 @@
 import QtQuick 2.1
 import QtQuick.Controls 2.1
+import DatabaseManager 1.0
 
 ApplicationWindow {
     id: root
@@ -11,6 +12,10 @@ ApplicationWindow {
     visible: true
     width: 800
 
+    DatabaseManager {
+        id: dbManager
+
+    }
     Login {
         id: loginPage
 
@@ -115,5 +120,6 @@ ApplicationWindow {
     }
     Logger {
         id: logger
+
     }
 }
