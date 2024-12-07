@@ -24,11 +24,10 @@ Item {
             text: "Login"
 
             onClicked: {
-                if (username.text === "admin" && password.text === "1234") {
+                if (authManager.login(username.text, password.text)) {
                     loginSuccess();
                 } else {
                     loginFailed();
-                    // console.log("Invalid credentials")
                 }
             }
         }

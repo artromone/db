@@ -1,33 +1,131 @@
 #include <QCryptographicHash>
 #include <QDebug>
+#include <QFile>
+#include <QSettings>
 #include <QtSql/QSqlError>
 #include <QtSql/QSqlQuery>
 
 #include "AuthManager.h"
 
-AuthManager::AuthManager(DatabaseManager& dbManager) : dbManager(dbManager)
-{
-}
-
 bool AuthManager::login(const QString& username, const QString& password)
 {
+    QByteArray hashedPassword =
+        QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256);
+
     QSqlQuery query;
-    query.prepare("SELECT password FROM users WHERE username = :username");
+    query.prepare("SELECT role FROM users WHERE username = :username AND password = :password");
     query.bindValue(":username", username);
+    query.bindValue(":password", hashedPassword.toHex());
 
     if (!query.exec())
     {
-        qWarning() << "Login query failed:" << query.lastError().text();
+        qCritical() << "Database query failed: " << query.lastError().text();
         return false;
     }
 
     if (query.next())
     {
-        QString storedHash = query.value(0).toString();
-        QString inputHash =
-            QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256).toHex();
-        return storedHash == inputHash;
+        QString role = query.value(0).toString();
+        qDebug() << "Login successful for user:" << username;
+        provideAccessToDatabase(role);
+        return true;
+    }
+    else
+    {
+        qDebug() << "Login failed for user:" << username;
+        return false;
+    }
+}
+
+void AuthManager::provideAccessToDatabase(const QString& role)
+{
+    if (role == "admin")
+    {
+        qDebug() << "Providing admin access to the main database.";
+    }
+    else if (role == "user")
+    {
+        qDebug() << "Providing limited user access to the main database.";
+    }
+    else
+    {
+        qDebug() << "Unknown role. Access denied.";
+    }
+}
+
+AuthManager::AuthManager(QObject* parent)
+{
+    QSettings settings("config.ini", QSettings::IniFormat);
+
+    auto host_ = settings.value("Database/host", "localhost").toString();
+    auto port_ = settings.value("Database/port", 5432).toInt();
+    auto dbName_ = settings.value("Database/databaseName", "").toString();
+    auto username_ = settings.value("Database/username", "").toString();
+    auto password_ = settings.value("Database/password", "").toString();
+
+    db_ = QSqlDatabase::addDatabase("QSQLITE");
+    db_.setHostName(host_);
+    db_.setPort(port_);
+    db_.setDatabaseName(dbName_);
+    db_.setUserName(username_);
+    db_.setPassword(password_);
+
+    if (!db_.open())
+    {
+        qFatal("Failed to open database: %s", qPrintable(db_.lastError().text()));
     }
 
-    return false;
+    QFile scriptFile("users.sql");
+    if (!scriptFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qWarning() << "Failed to open the script file:" << scriptFile.errorString();
+        return;
+    }
+
+    QTextStream in(&scriptFile);
+    QString script = in.readAll();
+    scriptFile.close();
+
+    QStringList statements = script.split(";", QString::SkipEmptyParts);
+    QSqlQuery query;
+
+    for (const QString& statement : statements)
+    {
+        qDebug() << "- Executing:" << statement;
+        if (!query.exec(statement.trimmed()))
+        {
+            qWarning() << "| Failed to execute the statement:" << query.lastError().text();
+        }
+    }
+
+    setUserPasswords("admin", "user");
+}
+
+void AuthManager::createUserTableIfNotExists(const QString& scriptFileName)
+{
+}
+
+void AuthManager::setUserPasswords(const QString& adminPassword, const QString& operatorPassword)
+{
+    QByteArray adminHashedPassword =
+        QCryptographicHash::hash(adminPassword.toUtf8(), QCryptographicHash::Sha256);
+    QByteArray operatorHashedPassword =
+        QCryptographicHash::hash(operatorPassword.toUtf8(), QCryptographicHash::Sha256);
+
+    QSqlQuery query;
+    query.prepare("UPDATE users SET password = :password WHERE username = :username");
+
+    query.bindValue(":username", "admin");
+    query.bindValue(":password", adminHashedPassword.toHex());
+    if (!query.exec())
+    {
+        qCritical() << "Failed to update password for admin: " << query.lastError().text();
+    }
+
+    query.bindValue(":username", "user");
+    query.bindValue(":password", operatorHashedPassword.toHex());
+    if (!query.exec())
+    {
+        qCritical() << "Failed to update password for user: " << query.lastError().text();
+    }
 }

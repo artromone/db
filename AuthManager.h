@@ -1,19 +1,22 @@
 #ifndef AUTHMANAGER_H
 #define AUTHMANAGER_H
 
-#include <QString>
+#include <QObject>
+#include <QSqlQuery>
 
-#include "DatabaseManager.h"
-
-class AuthManager
+class AuthManager : public QObject
 {
-public:
-    explicit AuthManager(DatabaseManager& dbManager);
+    Q_OBJECT
 
-    bool login(const QString& username, const QString& password);
+public:
+    explicit AuthManager(QObject* parent = nullptr);
+    Q_INVOKABLE bool login(const QString& username, const QString& password);
+    void provideAccessToDatabase(const QString& role);
+    void createUserTableIfNotExists(const QString& sqlFilePath);
+    void setUserPasswords(const QString& adminPassword, const QString& operatorPassword);
 
 private:
-    DatabaseManager& dbManager;
+    QSqlDatabase db_;
 };
 
 #endif // AUTHMANAGER_H

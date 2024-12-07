@@ -12,8 +12,9 @@ class DatabaseManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit DatabaseManager(const QString& dbName = "default.db");
+    explicit DatabaseManager(const QString& configFilePath = "config.ini");
     ~DatabaseManager();
+    QSqlDatabase& database() { return db_; }
 
     bool executeQuery(const QString& queryStr);
 
@@ -31,6 +32,8 @@ public:
     Q_INVOKABLE bool deleteEmployee(int employeeId);
     Q_INVOKABLE QList<QVariantMap> fetchEmployees();
 
+    Q_INVOKABLE QList<QVariantMap> fetchEmployeesWithDepartments();
+
     // Operations with projects
     Q_INVOKABLE bool addProject(const QString& name,
                                 int cost,
@@ -38,6 +41,8 @@ public:
                                 const QDateTime& begDate,
                                 const QDateTime& endDate);
     Q_INVOKABLE bool deleteProject(int projectId);
+
+    Q_INVOKABLE QVariantMap getTableMetadata(const QString& tableName);
 
 signals:
     void departmentAdded();
@@ -47,8 +52,15 @@ signals:
     void projectAdded();
     void projectDeleted();
 
+public:
+    QString host_;
+    int port_;
+    QString dbName_;
+    QString username_;
+    QString password_;
+
 private:
-    QSqlDatabase db;
+    QSqlDatabase db_;
 };
 
 #endif // DATABASEMANAGER_H

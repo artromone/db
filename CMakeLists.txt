@@ -12,12 +12,14 @@ find_package(Qt5 5.11 REQUIRED COMPONENTS Core Gui Quick Sql QuickControls2)
 set(SOURCES
     main.cpp
     DatabaseManager.cpp
+    AuthManager.cpp
     DateTimeValidator.cpp
 )
 
 # Заголовочные файлы
 set(HEADERS
     DatabaseManager.h
+    AuthManager.h
     DateTimeValidator.h
 )
 

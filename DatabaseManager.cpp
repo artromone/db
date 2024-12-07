@@ -1,23 +1,41 @@
 #include <QDebug>
+#include <QFile>
+#include <QSettings>
+#include <QTextStream>
+#include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlError>
+#include <QtSql/QSqlQuery>
 
 #include "DatabaseManager.h"
 
-DatabaseManager::DatabaseManager(const QString& dbName)
+DatabaseManager::DatabaseManager(const QString& configFilePath)
 {
-    db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName(dbName);
-    if (!db.open())
+    QSettings settings(configFilePath, QSettings::IniFormat);
+
+    host_ = settings.value("Database/host", "localhost").toString();
+    port_ = settings.value("Database/port", 5432).toInt();
+    dbName_ = settings.value("Database/databaseName", "").toString();
+    username_ = settings.value("Database/username", "").toString();
+    password_ = settings.value("Database/password", "").toString();
+
+    db_ = QSqlDatabase::addDatabase("QSQLITE");
+    db_.setHostName(host_);
+    db_.setPort(port_);
+    db_.setDatabaseName(dbName_);
+    db_.setUserName(username_);
+    db_.setPassword(password_);
+
+    if (!db_.open())
     {
-        qFatal("Failed to open database: %s", qPrintable(db.lastError().text()));
+        qFatal("Failed to open database: %s", qPrintable(db_.lastError().text()));
     }
 }
 
 DatabaseManager::~DatabaseManager()
 {
-    if (db.isOpen())
+    if (db_.isOpen())
     {
-        db.close();
+        db_.close();
     }
 }
 
@@ -115,6 +133,29 @@ bool DatabaseManager::deleteEmployee(int employeeId)
     return false;
 }
 
+
+QList<QVariantMap> DatabaseManager::fetchEmployeesWithDepartments()
+{
+    QList<QVariantMap> employees;
+    QSqlQuery query(
+        "SELECT e.id, e.first_name, e.last_name, e.position, e.salary, d.name AS department_name "
+        "FROM public.emplyees e "
+        "LEFT JOIN public.departments d ON e.department_id = d.id");
+
+    while (query.next())
+    {
+        QVariantMap employee;
+        employee["id"] = query.value(0);
+        employee["first_name"] = query.value(1);
+        employee["last_name"] = query.value(2);
+        employee["position"] = query.value(3);
+        employee["salary"] = query.value(4);
+        employee["department_name"] = query.value(5);
+        employees.append(employee);
+    }
+    return employees;
+}
+
 QList<QVariantMap> DatabaseManager::fetchEmployees()
 {
     QList<QVariantMap> employees;
@@ -163,4 +204,44 @@ bool DatabaseManager::deleteProject(int projectId)
         return true;
     }
     return false;
+}
+
+
+QVariantMap DatabaseManager::getTableMetadata(const QString& tableName)
+{
+    QVariantMap metadata;
+
+    QSqlQuery query;
+    query.prepare("PRAGMA table_info(" + tableName + ")");
+    if (query.exec())
+    {
+        QVariantList columns;
+        while (query.next())
+        {
+            QVariantMap column;
+            column["name"] = query.value(1);
+            column["type"] = query.value(2);
+            column["notnull"] = query.value(3);
+            column["default_value"] = query.value(4);
+            column["primary_key"] = query.value(5);
+            columns.append(column);
+        }
+        metadata["columns"] = columns;
+    }
+
+    query.prepare("PRAGMA foreign_key_list(" + tableName + ")");
+    if (query.exec())
+    {
+        QVariantList foreignKeys;
+        while (query.next())
+        {
+            QVariantMap foreignKey;
+            foreignKey["from"] = query.value(3);
+            foreignKey["to"] = query.value(4);
+            foreignKeys.append(foreignKey);
+        }
+        metadata["foreign_keys"] = foreignKeys;
+    }
+
+    return metadata;
 }
