@@ -40,10 +40,10 @@ public:
                                 int cost,
                                 int departmentId,
                                 const QString& begDate,
-                                const QString& endDate);
-
-    Q_INVOKABLE bool updateProject(const QString& name, const QVariantMap& newFields);
-    Q_INVOKABLE bool deleteProject(const QString& name);
+                                const QString& endDate,
+                                const QString& endRealDate);
+    Q_INVOKABLE bool updateProject(int id, const QVariantMap& newFields);
+    Q_INVOKABLE bool deleteProject(int id);
     Q_INVOKABLE QJsonArray fetchProjects();
 
     Q_INVOKABLE QVariantMap getTableMetadata(const QString& tableName);

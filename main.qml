@@ -7,7 +7,7 @@ ApplicationWindow {
 
     property string statusMessage: ""
 
-    height: 600
+    height: 700
     title: "Database Client Application"
     visible: true
     width: 1000

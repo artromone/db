@@ -144,7 +144,7 @@ QJsonArray DatabaseManager::fetchProjects()
     QJsonArray projectsArray;
 
     QSqlQuery query(
-        "SELECT id, name, cost, department_id, beg_date, end_date FROM public.projects");
+        "SELECT id, name, cost, department_id, beg_date, end_date, end_real_date FROM public.projects");
     while (query.next())
     {
         QJsonObject project;
@@ -154,6 +154,7 @@ QJsonArray DatabaseManager::fetchProjects()
         project["department_id"] = query.value("department_id").toInt();
         project["beg_date"] = query.value("beg_date").toString();
         project["end_date"] = query.value("end_date").toString();
+        project["end_real_date"] = query.value("end_real_date").toString();
         projectsArray.append(project);
     }
 
@@ -181,17 +182,19 @@ bool DatabaseManager::addProject(const QString& name,
                                  int cost,
                                  int departmentId,
                                  const QString& begDate,
-                                 const QString& endDate)
+                                 const QString& endDate,
+                                 const QString& endRealDate)
 {
     QString queryStr =
         QString(
             "INSERT INTO public.projects (name, cost, department_id, beg_date, "
-            "end_date) VALUES ('%1', %2, %3, '%4', '%5')")
+            "end_date, end_real_date) VALUES ('%1', %2, %3, '%4', '%5', '%6')")
             .arg(name)
             .arg(cost)
             .arg(departmentId)
             .arg(QDateTime::fromString(begDate, "dd.MM.yyyy HH:mm:ss").toString(Qt::ISODate))
-            .arg(QDateTime::fromString(endDate, "dd.MM.yyyy HH:mm:ss").toString(Qt::ISODate));
+            .arg(QDateTime::fromString(endDate, "dd.MM.yyyy HH:mm:ss").toString(Qt::ISODate))
+            .arg(QDateTime::fromString(endRealDate, "dd.MM.yyyy HH:mm:ss").toString(Qt::ISODate));
     if (executeQuery(queryStr))
     {
         emit projectAdded();
@@ -200,9 +203,9 @@ bool DatabaseManager::addProject(const QString& name,
     return false;
 }
 
-bool DatabaseManager::deleteProject(const QString& name)
+bool DatabaseManager::deleteProject(int id)
 {
-    QString queryStr = QString("DELETE FROM projects WHERE name = '%1'").arg(name);
+    QString queryStr = QString("DELETE FROM projects WHERE id = '%1'").arg(id);
 
     if (executeQuery(queryStr))
     {
@@ -212,7 +215,7 @@ bool DatabaseManager::deleteProject(const QString& name)
     return false;
 }
 
-bool DatabaseManager::updateProject(const QString& name, const QVariantMap& newFields)
+bool DatabaseManager::updateProject(int id, const QVariantMap& newFields)
 {
     if (newFields.isEmpty())
         return false;
@@ -224,7 +227,7 @@ bool DatabaseManager::updateProject(const QString& name, const QVariantMap& newF
     }
 
     QString queryStr =
-        QString("UPDATE projects SET %1 WHERE name = '%2'").arg(updateClauses.join(", ")).arg(name);
+        QString("UPDATE projects SET %1 WHERE id = '%2'").arg(updateClauses.join(", ")).arg(id);
 
     if (executeQuery(queryStr))
     {

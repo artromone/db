@@ -102,7 +102,12 @@ Item {
         Controls1.TableViewColumn {
             role: "end_date"
             title: "End Date"
-            width: 160
+            width: 150
+        }
+        Controls1.TableViewColumn {
+            role: "end_real_date"
+            title: "End Real Date"
+            width: 150
         }
     }
     Column {
@@ -114,6 +119,11 @@ Item {
         anchors.topMargin: 20
         spacing: 10
 
+        TextField {
+            id: projectId
+
+            placeholderText: "ID"
+        }
         TextField {
             id: projectName
 
@@ -140,8 +150,16 @@ Item {
             validator: DateTimeValidator {
             }
         }
-        TextField {
+         TextField {
             id: projectEndDate
+
+            inputMask: "99.99.9999 99:99:99"
+            text: Qt.formatDateTime(new Date(), "dd.MM.yyyy HH:mm:ss")
+
+            validator: DateTimeValidator {
+            }
+        }  TextField {
+            id: projectEndRealDate
 
             inputMask: "99.99.9999 99:99:99"
             text: Qt.formatDateTime(new Date(), "dd.MM.yyyy HH:mm:ss")
@@ -170,13 +188,15 @@ Item {
 
             onClicked: {
                 var newFields = {
+                    "name": projectName.text,
                     "cost": parseInt(projectCost.text),
                     "department_id": parseInt(projectDepartment.text),
                     "beg_date": projectBegDate.text,
-                    "end_date": projectEndDate.text
+                    "end_date": projectEndDate.text,
+                    "end_real_date": projectEndRealDate.text
                 };
-                if (dbManager.updateProject(projectName.text, newFields)) {
-                    logger.log("Project updated: " + projectName.text);
+                if (dbManager.updateProject(parseInt(projectId.text), newFields)) {
+                    logger.log("Project updated: " + parseInt(projectId.text));
                 } else {
                     logger.log("Failed to update project");
                 }
@@ -187,8 +207,8 @@ Item {
             text: "Delete Project"
 
             onClicked: {
-                if (dbManager.deleteProject(projectName.text)) {
-                    logger.log("Project deleted: " + projectName.text);
+                if (dbManager.deleteProject(parseInt(projectId.text))) {
+                    logger.log("Project deleted: " + parseInt(projectId.text));
                 } else {
                     logger.log("Failed to delete project");
                 }
