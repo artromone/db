@@ -4,6 +4,7 @@ import QtQuick.Controls 2.1
 Item {
     signal navigateToDepartments
     signal navigateToEmployees
+    signal navigateToDE
     signal navigateToProjects
     signal navigateToReports
 
@@ -27,6 +28,15 @@ Item {
             onClicked: {
                 console.log("Navigate to DepartmentForm");
                 navigateToDepartments();
+            }
+        }
+        Button {
+            text: "Manage Department/Employees"
+            width: 200
+
+            onClicked: {
+                console.log("Navigate to DEForm");
+                navigateToDE();
             }
         }
         Button {

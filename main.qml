@@ -44,6 +44,10 @@ ApplicationWindow {
             employeePage.visible = true;
             menuPage.visible = false;
         }
+        onNavigateToDE: {
+            dePage.visible = true;
+            menuPage.visible = false;
+        }
         onNavigateToProjects: {
             projectPage.visible = true;
             menuPage.visible = false;
@@ -62,6 +66,19 @@ ApplicationWindow {
         EmployeeForm {
             onNavigateBack: {
                 employeePage.visible = false;
+                menuPage.visible = true;
+            }
+        }
+    }
+     Item {
+        id: dePage
+
+        anchors.fill: parent
+        visible: false
+
+         DEForm {
+            onNavigateBack: {
+                dePage.visible = false;
                 menuPage.visible = true;
             }
         }

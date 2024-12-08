@@ -52,6 +52,74 @@ bool DatabaseManager::addDepartment()
     }
 }
 
+Q_INVOKABLE bool DatabaseManager::addDepartmentEmployee(int departmentId, int employeeId)
+{
+    QString queryStr = QString(
+                           "INSERT INTO public.department_employees (department_id, employee_id) "
+                           "VALUES (%1, %2)")
+                           .arg(departmentId)
+                           .arg(employeeId);
+
+    if (executeQuery(queryStr))
+    {
+        emit departmentEmployeeAdded();
+        return true;
+    }
+    return false;
+}
+
+Q_INVOKABLE bool DatabaseManager::updateDepartmentEmployee(int id, const QVariantMap& newFields)
+{
+    if (newFields.isEmpty())
+        return false;
+
+    QStringList updateClauses;
+    for (const QString& key : newFields.keys())
+    {
+        updateClauses.append(QString("%1 = %2").arg(key).arg(newFields.value(key).toInt()));
+    }
+
+    QString queryStr = QString("UPDATE public.department_employees SET %1 WHERE id = %2")
+                           .arg(updateClauses.join(", "))
+                           .arg(id);
+
+    if (executeQuery(queryStr))
+    {
+        emit departmentEmployeeUpdated();
+        return true;
+    }
+    return false;
+}
+
+Q_INVOKABLE bool DatabaseManager::deleteDepartmentEmployee(int departmentEmployeeId)
+{
+    QString queryStr =
+        QString("DELETE FROM public.department_employees WHERE id = %1").arg(departmentEmployeeId);
+
+    if (executeQuery(queryStr))
+    {
+        emit departmentEmployeeDeleted();
+        return true;
+    }
+    return false;
+}
+
+Q_INVOKABLE QJsonArray DatabaseManager::fetchDepartmentEmployees()
+{
+    QJsonArray departmentEmployees;
+    QSqlQuery query("SELECT id, department_id, employee_id FROM public.department_employees");
+
+    while (query.next())
+    {
+        QJsonObject departmentEmployee;
+        departmentEmployee["id"] = query.value(0).toInt();
+        departmentEmployee["department_id"] = query.value(1).toInt();
+        departmentEmployee["employee_id"] = query.value(2).toInt();
+        departmentEmployees.append(departmentEmployee);
+    }
+    return departmentEmployees;
+}
+
 bool DatabaseManager::deleteDepartment(int departmentId)
 {
     qDebug() << departmentId;
@@ -148,28 +216,6 @@ bool DatabaseManager::deleteEmployee(int employeeId)
         return true;
     }
     return false;
-}
-
-QList<QVariantMap> DatabaseManager::fetchEmployeesWithDepartments()
-{
-    QList<QVariantMap> employees;
-    QSqlQuery query(
-        "SELECT e.id, e.first_name, e.last_name, e.position, e.salary, d.name AS department_name "
-        "FROM public.emplyees e "
-        "LEFT JOIN public.departments d ON e.department_id = d.id");
-
-    while (query.next())
-    {
-        QVariantMap employee;
-        employee["id"] = query.value(0);
-        employee["first_name"] = query.value(1);
-        employee["last_name"] = query.value(2);
-        employee["position"] = query.value(3);
-        employee["salary"] = query.value(4);
-        employee["department_name"] = query.value(5);
-        employees.append(employee);
-    }
-    return employees;
 }
 
 QJsonArray DatabaseManager::fetchProjects()

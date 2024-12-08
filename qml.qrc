@@ -6,6 +6,7 @@
         <file>Logger.qml</file>
         <file>EmployeeForm.qml</file>
         <file>DepartmentForm.qml</file>
+        <file>DEForm.qml</file>
         <file>ProjectForm.qml</file>
         <file>ReportView.qml</file>
     </qresource>

@@ -33,7 +33,11 @@ public:
     Q_INVOKABLE bool deleteEmployee(int employeeId);
     Q_INVOKABLE QJsonArray fetchEmployees();
 
-    Q_INVOKABLE QList<QVariantMap> fetchEmployeesWithDepartments();
+    // Operations with D/E
+    Q_INVOKABLE bool addDepartmentEmployee(int departmentId, int employeeId);
+    Q_INVOKABLE bool updateDepartmentEmployee(int id, const QVariantMap& newFields);
+    Q_INVOKABLE bool deleteDepartmentEmployee(int departmentEmployeeId);
+    Q_INVOKABLE QJsonArray fetchDepartmentEmployees();
 
     // Operations with projects
     Q_INVOKABLE bool addProject(const QString& name,
@@ -56,6 +60,10 @@ signals:
     void employeeAdded();
     void employeeDeleted();
     void employeeUpdated();
+
+    void departmentEmployeeAdded();
+    void departmentEmployeeUpdated();
+    void departmentEmployeeDeleted();
 
     void projectAdded();
     void projectUpdated();
