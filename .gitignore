@@ -78,3 +78,12 @@ CMakeLists.txt.user*
 build/
 config.ini
 compile_commands.json
+
+department_employees.pdf
+department_employees.txt
+departments.pdf
+departments.txt
+emplyees.pdf
+emplyees.txt
+projects.pdf
+projects.txt

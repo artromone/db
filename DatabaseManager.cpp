@@ -1,7 +1,13 @@
 #include <QDebug>
 #include <QFile>
 #include <QJsonObject>
+#include <QPainter>
+#include <QPdfWriter>
+#include <QSqlRecord>
+#include <QTextDocument>
 #include <QTextStream>
+#include <QTextTable>
+#include <QTextTableCell>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlError>
 #include <QtSql/QSqlQuery>
@@ -356,4 +362,92 @@ QVariantMap DatabaseManager::getTableMetadata(const QString& tableName)
     }
 
     return metadata;
+}
+
+void DatabaseManager::generateReportPDF(const QString& tableName)
+{
+    QPdfWriter writer(tableName + ".pdf");
+    writer.setPageSize(QPagedPaintDevice::A4);
+    writer.setResolution(300);
+    QPainter painter(&writer);
+
+    if (!painter.isActive())
+    {
+        qWarning() << "Failed to create painter for PDF";
+        return;
+    }
+
+    QFont font = painter.font();
+    font.setPointSize(12);
+    painter.setFont(font);
+
+    QSqlQuery query("SELECT * FROM " + tableName); // Пример для одной таблицы
+    int colCount = query.record().count();
+
+    QTextDocument doc;
+    QTextCursor cursor(&doc);
+
+    // Заголовки таблиц
+    QTextTableFormat tableFormat;
+    tableFormat.setBorder(1); // Добавляем рамки для таблицы
+    QTextTable* table = cursor.insertTable(1, colCount, tableFormat);
+
+    // Заполнение заголовков
+    for (int i = 0; i < colCount; i++)
+    {
+        QTextTableCell cell = table->cellAt(0, i);
+        cell.firstCursorPosition().insertText(query.record().fieldName(i));
+    }
+
+    // Заполнение данных
+    int rowIndex = 1;
+    while (query.next())
+    {
+        table->appendRows(1); // Добавление новой строки
+        for (int col = 0; col < colCount; ++col)
+        {
+            QTextTableCell cell = table->cellAt(rowIndex, col);
+            cell.firstCursorPosition().insertText(query.value(col).toString());
+        }
+        rowIndex++;
+    }
+
+    // Настроим вывод документа в PDF
+    doc.setPageSize(writer.pageSizeMM());
+    doc.drawContents(&painter); // Отрисовка текста и таблицы на PDF
+    painter.end();
+}
+
+void DatabaseManager::generateReportTXT(const QString& tableName)
+{
+    QFile file(tableName + ".txt");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        qWarning() << "Failed to open file for writing:" << file.errorString();
+        return;
+    }
+
+    QTextStream out(&file);
+
+    out << tableName + " Report\n\n";
+
+    QSqlQuery query("SELECT * FROM " + tableName);
+    int colCount = query.record().count();
+
+    for (int i = 0; i < colCount; ++i)
+    {
+        out << query.record().fieldName(i) << "\t";
+    }
+    out << "\n";
+
+    while (query.next())
+    {
+        for (int i = 0; i < colCount; ++i)
+        {
+            out << query.value(i).toString() << "\t";
+        }
+        out << "\n";
+    }
+
+    file.close();
 }

@@ -11,12 +11,24 @@ Item {
         Button {
             text: "Generate TXT Report"
 
-            onClicked: logger.log("TXT Report generated")
+            onClicked: {
+                dbManager.generateReportTXT("projects")
+                dbManager.generateReportTXT("emplyees")
+                dbManager.generateReportTXT("departments")
+                dbManager.generateReportTXT("department_employees")
+                logger.log("TXT Report generated")
+            }
         }
         Button {
             text: "Generate PDF Report"
 
-            onClicked: logger.log("PDF Report generated")
+            onClicked: {
+                dbManager.generateReportPDF("projects")
+                dbManager.generateReportPDF("emplyees")
+                dbManager.generateReportPDF("departments")
+                dbManager.generateReportPDF("department_employees")
+                logger.log("PDF Report generated")
+            }
         }
         Button {
             text: "Back"

@@ -52,6 +52,9 @@ public:
 
     Q_INVOKABLE QVariantMap getTableMetadata(const QString& tableName);
 
+    Q_INVOKABLE void generateReportPDF(const QString& tableName);
+    Q_INVOKABLE void generateReportTXT(const QString& tableName);
+
 signals:
     void departmentAdded();
     void departmentUpdated();
