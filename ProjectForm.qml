@@ -9,9 +9,6 @@ Item {
 
     function updateTable() {
         projectsTableView.visible = false;
-        var metadata = dbManager.getTableMetadata("projects");
-        console.log("Columns:", metadata.columns);
-        console.log("Foreign Keys:", metadata.foreign_keys);
         var projects = dbManager.fetchProjects();
         projectModel.clear();
         for (var i = 0; i < projects.length; i++) {
@@ -134,6 +131,11 @@ Item {
                     projectEndRealDate.text = selectedProject.end_real_date || '';
                 }
             }
+        }
+        MenuItem {
+            property int profit: dbManager.calculateProjectProfit(projectModel.get(projectsTableView.activatedIdx).id)
+
+            text: profit > 0 ? "Project profit" + profit : "Project not ended."
         }
     }
     Column {

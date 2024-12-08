@@ -12,22 +12,22 @@ Item {
             text: "Generate TXT Report"
 
             onClicked: {
-                dbManager.generateReportTXT("projects")
-                dbManager.generateReportTXT("emplyees")
-                dbManager.generateReportTXT("departments")
-                dbManager.generateReportTXT("department_employees")
-                logger.log("TXT Report generated")
+                dbManager.generateReportTXT("projects");
+                dbManager.generateReportTXT("emplyees");
+                dbManager.generateReportTXT("departments");
+                dbManager.generateReportTXT("department_employees");
+                logger.log("TXT Report generated");
             }
         }
         Button {
             text: "Generate PDF Report"
 
             onClicked: {
-                dbManager.generateReportPDF("projects")
-                dbManager.generateReportPDF("emplyees")
-                dbManager.generateReportPDF("departments")
-                dbManager.generateReportPDF("department_employees")
-                logger.log("PDF Report generated")
+                dbManager.generateReportPDF("projects");
+                dbManager.generateReportPDF("emplyees");
+                dbManager.generateReportPDF("departments");
+                dbManager.generateReportPDF("department_employees");
+                logger.log("PDF Report generated");
             }
         }
         Button {

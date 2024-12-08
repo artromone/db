@@ -327,49 +327,134 @@ bool DatabaseManager::updateProject(int id, const QVariantMap& newFields)
     return false;
 }
 
-QVariantMap DatabaseManager::getTableMetadata(const QString& tableName)
+QJsonArray DatabaseManager::getTableMetadata(const QString& tableName)
 {
-    QVariantMap metadata;
+    QJsonArray metadataArray;
 
+    // Ensure database connection is open
+    QSqlDatabase db = QSqlDatabase::database();
+    if (!db.isOpen())
+    {
+        qDebug() << "Database is not open!";
+        return metadataArray;
+    }
+
+    // Query to retrieve column metadata
     QSqlQuery query;
-    query.prepare("PRAGMA table_info(" + tableName + ")");
-    if (query.exec())
+    query.prepare(R"(
+        SELECT 
+            column_name,
+            data_type,
+            is_nullable,
+            column_default,
+            (SELECT COUNT(*) FROM 
+                information_schema.table_constraints tc
+                JOIN information_schema.constraint_column_usage AS ccu 
+                ON tc.constraint_name = ccu.constraint_name
+            WHERE 
+                tc.table_name = :tableName
+                AND tc.constraint_type = 'PRIMARY KEY' 
+                AND ccu.column_name = column_name
+            ) > 0 AS is_primary_key
+        FROM 
+            information_schema.columns
+        WHERE 
+            table_name = :tableName
+        ORDER BY 
+            ordinal_position
+    )");
+
+    query.bindValue(":tableName", tableName);
+
+    if (!query.exec())
     {
-        QVariantList columns;
-        while (query.next())
-        {
-            QVariantMap column;
-            column["name"] = query.value(1);
-            column["type"] = query.value(2);
-            column["notnull"] = query.value(3);
-            column["default_value"] = query.value(4);
-            column["primary_key"] = query.value(5);
-            columns.append(column);
-        }
-        metadata["columns"] = columns;
+        qDebug() << "Error retrieving table metadata:" << query.lastError().text();
+        return metadataArray;
     }
 
-    query.prepare("PRAGMA foreign_key_list(" + tableName + ")");
-    if (query.exec())
+    // Process results
+    while (query.next())
     {
-        QVariantList foreignKeys;
-        while (query.next())
-        {
-            QVariantMap foreignKey;
-            foreignKey["from"] = query.value(3);
-            foreignKey["to"] = query.value(4);
-            foreignKeys.append(foreignKey);
-        }
-        metadata["foreign_keys"] = foreignKeys;
+        QJsonObject columnMetadata;
+        columnMetadata["name"] = query.value(0).toString();
+        columnMetadata["dataType"] = query.value(1).toString();
+        columnMetadata["isNullable"] = (query.value(2).toString() == "YES");
+
+        // Handle default value
+        QVariant defaultVal = query.value(3);
+        columnMetadata["defaultValue"] = defaultVal.isNull() ? "" : defaultVal.toString();
+
+        columnMetadata["isPrimaryKey"] = query.value(4).toBool();
+
+        metadataArray.append(columnMetadata);
     }
 
-    return metadata;
+    return metadataArray;
+}
+
+double DatabaseManager::calculateProjectProfit(int projectId)
+{
+    QSqlQuery projectQuery;
+    projectQuery.prepare(
+        "SELECT name, cost, beg_date, end_date, end_real_date, department_id FROM public.projects "
+        "WHERE id = :id");
+    projectQuery.bindValue(":id", projectId);
+
+    if (!projectQuery.exec() || !projectQuery.next())
+    {
+        qWarning() << "Project not found or query failed";
+        return 0.0;
+    }
+
+    QString name = projectQuery.value("name").toString();
+    double projectCost = projectQuery.value("cost").toDouble();
+    QDate begDate = QDate::fromString(projectQuery.value("beg_date").toString(), Qt::ISODate);
+    QDate endDate = QDate::fromString(projectQuery.value("end_date").toString(), Qt::ISODate);
+    QDate endRealDate =
+        QDate::fromString(projectQuery.value("end_real_date").toString(), Qt::ISODate);
+    int departmentId = projectQuery.value("department_id").toInt();
+
+    bool isProjectCompleted = !endRealDate.isNull() && endRealDate <= QDate::currentDate();
+
+    QSqlQuery employeesQuery;
+    employeesQuery.prepare(
+        "SELECT SUM(e.salary) as total_salary "
+        "FROM public.emplyees e "
+        "JOIN public.department_employees de ON e.id = de.employee_id "
+        "WHERE de.department_id = :department_id");
+    employeesQuery.bindValue(":department_id", departmentId);
+
+    double totalSalary = 0.0;
+    if (employeesQuery.exec() && employeesQuery.next())
+    {
+        totalSalary = employeesQuery.value("total_salary").toDouble();
+    }
+
+    // Расчет длительности проекта в месяцах
+    endDate = isProjectCompleted ? endRealDate : endDate;
+    int projectMonths = (endDate.year() - begDate.year()) * 12 + (endDate.month() - begDate.month());
+
+    // Расчет общих затрат на зарплаты за период проекта
+    double totalLaborCost = totalSalary * projectMonths;
+
+    // Расчет прибыли
+    double profit = projectCost - totalLaborCost;
+
+    // Возвращаем особые значения для незавершенных проектов
+    if (!isProjectCompleted)
+    {
+        // Возвращаем отрицательное значение для незавершенных проектов
+        return -1 * totalLaborCost;
+    }
+
+    return profit;
 }
 
 void DatabaseManager::generateReportPDF(const QString& tableName)
 {
     QSqlQuery query(db_);
-    if (!query.exec(QString("SELECT * FROM %1").arg(tableName))) {
+    if (!query.exec(QString("SELECT * FROM %1").arg(tableName)))
+    {
         qWarning() << "Failed to execute query:" << query.lastError().text();
         return;
     }

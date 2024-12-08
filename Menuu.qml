@@ -2,9 +2,9 @@ import QtQuick 2.1
 import QtQuick.Controls 2.1
 
 Item {
+    signal navigateToDE
     signal navigateToDepartments
     signal navigateToEmployees
-    signal navigateToDE
     signal navigateToProjects
     signal navigateToReports
 
@@ -17,7 +17,7 @@ Item {
             width: 200
 
             onClicked: {
-                console.log("Navigate to EmployeeForm");
+                logger.log("Navigate to EmployeeForm");
                 navigateToEmployees();
             }
         }
@@ -26,7 +26,7 @@ Item {
             width: 200
 
             onClicked: {
-                console.log("Navigate to DepartmentForm");
+                logger.log("Navigate to DepartmentForm");
                 navigateToDepartments();
             }
         }
@@ -35,7 +35,7 @@ Item {
             width: 200
 
             onClicked: {
-                console.log("Navigate to DEForm");
+                logger.log("Navigate to DEForm");
                 navigateToDE();
             }
         }
@@ -44,7 +44,7 @@ Item {
             width: 200
 
             onClicked: {
-                console.log("Navigate to ProjectForm");
+                logger.log("Navigate to ProjectForm");
                 navigateToProjects();
             }
         }
@@ -53,7 +53,7 @@ Item {
             width: 200
 
             onClicked: {
-                console.log("Navigate to ReportView");
+                logger.log("Navigate to ReportView");
                 navigateToReports();
             }
         }

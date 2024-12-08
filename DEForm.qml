@@ -7,9 +7,6 @@ Item {
 
     function updateTable() {
         departmentEmployeesTableView.visible = false;
-        var metadata = dbManager.getTableMetadata("department_employees");
-        console.log("Columns:", metadata.columns);
-        console.log("Foreign Keys:", metadata.foreign_keys);
         var departmentEmployees = dbManager.fetchDepartmentEmployees();
         departmentEmployeesModel.clear();
         for (var i = 0; i < departmentEmployees.length; i++) {
@@ -63,6 +60,7 @@ Item {
         }
         model: ListModel {
             id: departmentEmployeesModel
+
         }
         rowDelegate: Rectangle {
             color: styleData.selected ? "black" : "white"
@@ -92,7 +90,6 @@ Item {
             width: 100
         }
     }
-
     Menu {
         id: contextMenu
 
@@ -109,7 +106,6 @@ Item {
             }
         }
     }
-
     Column {
         anchors.bottom: root.bottom
         anchors.left: departmentEmployeesTableView.right
@@ -121,21 +117,21 @@ Item {
 
         TextField {
             id: departmentEmployeeId
+
             placeholderText: "ID"
         }
-
         TextField {
             id: departmentId
-            placeholderText: "Department ID"
-            inputMethodHints: Qt.ImhFormattedNumbersOnly
-        }
 
+            inputMethodHints: Qt.ImhFormattedNumbersOnly
+            placeholderText: "Department ID"
+        }
         TextField {
             id: employeeId
-            placeholderText: "Employee ID"
-            inputMethodHints: Qt.ImhFormattedNumbersOnly
-        }
 
+            inputMethodHints: Qt.ImhFormattedNumbersOnly
+            placeholderText: "Employee ID"
+        }
         Button {
             text: "Add Department Employee"
 
@@ -150,7 +146,6 @@ Item {
                 updateTable();
             }
         }
-
         Button {
             text: "Update Department Employee"
 
@@ -167,7 +162,6 @@ Item {
                 updateTable();
             }
         }
-
         Button {
             text: "Delete Department Employee"
 
@@ -180,7 +174,6 @@ Item {
                 updateTable();
             }
         }
-
         Button {
             text: "Back"
 

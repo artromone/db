@@ -1,15 +1,13 @@
 import QtQuick 2.1
 import QtQuick.Controls 1.4 as Controls1
 import QtQuick.Controls 2.1
+import QtQuick.Layouts 1.1
 
 Item {
     signal navigateBack
 
     function updateTable() {
         employeeTableView.visible = false;
-        var metadata = dbManager.getTableMetadata("emplyees");
-        console.log("Columns:", metadata.columns);
-        console.log("Foreign Keys:", metadata.foreign_keys);
         var employees = dbManager.fetchEmployees();
         employeeModel.clear();
         for (var i = 0; i < employees.length; i++) {

@@ -12,6 +12,16 @@
 class DatabaseManager : public QObject
 {
     Q_OBJECT
+
+    struct ColumnMetadata
+    {
+        QString name;
+        QString dataType;
+        bool isPrimaryKey;
+        bool isNullable;
+        QString defaultValue;
+    };
+
 public:
     explicit DatabaseManager();
     ~DatabaseManager();
@@ -49,8 +59,9 @@ public:
     Q_INVOKABLE bool updateProject(int id, const QVariantMap& newFields);
     Q_INVOKABLE bool deleteProject(int id);
     Q_INVOKABLE QJsonArray fetchProjects();
+    Q_INVOKABLE double calculateProjectProfit(int projectId);
 
-    Q_INVOKABLE QVariantMap getTableMetadata(const QString& tableName);
+    Q_INVOKABLE QJsonArray getTableMetadata(const QString& tableName);
 
     Q_INVOKABLE void generateReportPDF(const QString& tableName);
     Q_INVOKABLE void generateReportTXT(const QString& tableName);

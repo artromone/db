@@ -7,9 +7,6 @@ Item {
 
     function updateTable() {
         departmentTableView.visible = false;
-        var metadata = dbManager.getTableMetadata("departments");
-        console.log("Columns:", metadata.columns);
-        console.log("Foreign Keys:", metadata.foreign_keys);
         var departments = dbManager.fetchDepartments();
         departmentModel.clear();
         for (var i = 0; i < departments.length; i++) {
