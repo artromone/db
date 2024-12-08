@@ -21,6 +21,9 @@ Item {
     }
 
     Controls1.TableView {
+
+property int activatedIdx: -1
+
         id: projectsTableView
 
         alternatingRowColors: false
@@ -29,6 +32,12 @@ Item {
         anchors.top: root.top
         height: 500
         width: 700
+
+        onActivated:
+        {
+            contextMenu.popup()
+            activatedIdx = row
+        }
 
         headerDelegate: Item {
             height: 25
@@ -40,7 +49,7 @@ Item {
                 color: "lightgray"
             }
             Text {
-                anchors.fill: parent
+                anchors.fill: ponClickedarent
                 anchors.margins: 5
                 color: "black"
                 elide: Text.ElideRight
@@ -52,11 +61,12 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 color: styleData.selected ? "black" : "white"
+
+              
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 color: styleData.selected ? "white" : "black"
-                // font.family: "Monospace"
                 font.pixelSize: 13
                 text: styleData.value
                 wrapMode: Text.Wrap
@@ -64,7 +74,6 @@ Item {
         }
         model: ListModel {
             id: projectModel
-
         }
         rowDelegate: Rectangle {
             color: styleData.selected ? "black" : "white"
@@ -110,6 +119,28 @@ Item {
             width: 150
         }
     }
+
+    Menu {
+        id: contextMenu
+
+        MenuItem {
+            text: "Fill Fields"
+            onTriggered: {
+                var selectedIndex = projectsTableView.activatedIdx;
+                if (selectedIndex !== -1) {
+                    var selectedProject = projectModel.get(selectedIndex);
+                    projectId.text = selectedProject.id;
+                    projectName.text = selectedProject.name;
+                    projectCost.text = selectedProject.cost.toString();
+                    projectDepartment.text = selectedProject.department_id.toString();
+                    projectBegDate.text = selectedProject.beg_date;
+                    projectEndDate.text = selectedProject.end_date;
+                    projectEndRealDate.text = selectedProject.end_real_date;
+                }
+            }
+        }
+    }
+
     Column {
         anchors.bottom: root.bottom
         anchors.left: projectsTableView.right
@@ -121,55 +152,43 @@ Item {
 
         TextField {
             id: projectId
-
             placeholderText: "ID"
         }
         TextField {
             id: projectName
-
             placeholderText: "Project Name"
         }
         TextField {
             id: projectCost
-
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             placeholderText: "Project Cost"
         }
         TextField {
             id: projectDepartment
-
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             placeholderText: "Department ID"
         }
         TextField {
             id: projectBegDate
-
             inputMask: "99.99.9999 99:99:99"
             text: Qt.formatDateTime(new Date(), "dd.MM.yyyy HH:mm:ss")
-
-            validator: DateTimeValidator {
-            }
+            validator: DateTimeValidator {}
         }
-         TextField {
+        TextField {
             id: projectEndDate
-
             inputMask: "99.99.9999 99:99:99"
             text: Qt.formatDateTime(new Date(), "dd.MM.yyyy HH:mm:ss")
-
-            validator: DateTimeValidator {
-            }
-        }  TextField {
-            id: projectEndRealDate
-
-            inputMask: "99.99.9999 99:99:99"
-            text: Qt.formatDateTime(new Date(), "dd.MM.yyyy HH:mm:ss")
-
-            validator: DateTimeValidator {
-            }
+            validator: DateTimeValidator {}
         }
+        TextField {
+            id: projectEndRealDate
+            inputMask: "99.99.9999 99:99:99"
+            text: Qt.formatDateTime(new Date(), "dd.MM.yyyy HH:mm:ss")
+            validator: DateTimeValidator {}
+        }
+
         Button {
             text: "Add Project"
-
             onClicked: {
                 var cost = parseInt(projectCost.text);
                 var departmentId = parseInt(projectDepartment.text);
@@ -183,10 +202,12 @@ Item {
                 updateTable();
             }
         }
+
         Button {
             text: "Update Project"
-
             onClicked: {
+
+                            contextMenu.popup()
                 var newFields = {
                     "name": projectName.text,
                     "cost": parseInt(projectCost.text),
@@ -203,9 +224,9 @@ Item {
                 updateTable();
             }
         }
+
         Button {
             text: "Delete Project"
-
             onClicked: {
                 if (dbManager.deleteProject(parseInt(projectId.text))) {
                     logger.log("Project deleted: " + parseInt(projectId.text));
@@ -215,10 +236,11 @@ Item {
                 updateTable();
             }
         }
+
         Button {
             text: "Back"
-
             onClicked: navigateBack()
         }
     }
 }
+
