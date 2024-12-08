@@ -1,8 +1,8 @@
 #ifndef DATABASEMANAGER_H
 #define DATABASEMANAGER_H
 
-#include <QJsonArray>
 #include <QDateTime>
+#include <QJsonArray>
 #include <QList>
 #include <QString>
 #include <QVariantMap>
@@ -41,7 +41,10 @@ public:
                                 int departmentId,
                                 const QString& begDate,
                                 const QString& endDate);
-    Q_INVOKABLE bool deleteProject(int projectId);
+
+    Q_INVOKABLE bool updateProject(const QString& name, const QVariantMap& newFields);
+    Q_INVOKABLE bool deleteProject(const QString& name);
+    Q_INVOKABLE QJsonArray fetchProjects();
 
     Q_INVOKABLE QVariantMap getTableMetadata(const QString& tableName);
 
@@ -51,6 +54,7 @@ signals:
     void employeeAdded();
     void employeeDeleted();
     void projectAdded();
+    void projectUpdated();
     void projectDeleted();
 
 private:

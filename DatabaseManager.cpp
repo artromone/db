@@ -139,6 +139,27 @@ QList<QVariantMap> DatabaseManager::fetchEmployeesWithDepartments()
     return employees;
 }
 
+QJsonArray DatabaseManager::fetchProjects()
+{
+    QJsonArray projectsArray;
+
+    QSqlQuery query(
+        "SELECT id, name, cost, department_id, beg_date, end_date FROM public.projects");
+    while (query.next())
+    {
+        QJsonObject project;
+        project["id"] = query.value("id").toInt();
+        project["name"] = query.value("name").toString();
+        project["cost"] = query.value("cost").toDouble();
+        project["department_id"] = query.value("department_id").toInt();
+        project["beg_date"] = query.value("beg_date").toString();
+        project["end_date"] = query.value("end_date").toString();
+        projectsArray.append(project);
+    }
+
+    return projectsArray;
+}
+
 QJsonArray DatabaseManager::fetchEmployees()
 {
     QJsonArray employees;
@@ -179,9 +200,10 @@ bool DatabaseManager::addProject(const QString& name,
     return false;
 }
 
-bool DatabaseManager::deleteProject(int projectId)
+bool DatabaseManager::deleteProject(const QString& name)
 {
-    QString queryStr = QString("DELETE FROM public.projects WHERE id = %1").arg(projectId);
+    QString queryStr = QString("DELETE FROM projects WHERE name = '%1'").arg(name);
+
     if (executeQuery(queryStr))
     {
         emit projectDeleted();
@@ -190,6 +212,27 @@ bool DatabaseManager::deleteProject(int projectId)
     return false;
 }
 
+bool DatabaseManager::updateProject(const QString& name, const QVariantMap& newFields)
+{
+    if (newFields.isEmpty())
+        return false;
+
+    QStringList updateClauses;
+    for (const QString& key : newFields.keys())
+    {
+        updateClauses.append(QString("%1 = '%2'").arg(key).arg(newFields.value(key).toString()));
+    }
+
+    QString queryStr =
+        QString("UPDATE projects SET %1 WHERE name = '%2'").arg(updateClauses.join(", ")).arg(name);
+
+    if (executeQuery(queryStr))
+    {
+        emit projectUpdated();
+        return true;
+    }
+    return false;
+}
 
 QVariantMap DatabaseManager::getTableMetadata(const QString& tableName)
 {

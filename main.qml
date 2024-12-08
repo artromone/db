@@ -10,7 +10,7 @@ ApplicationWindow {
     height: 600
     title: "Database Client Application"
     visible: true
-    width: 800
+    width: 1000
 
     DatabaseManager {
         id: dbManager

@@ -56,12 +56,9 @@ Item {
         }
 
         Component.onCompleted: {
-            // Fetch metadata
             var metadata = dbManager.getTableMetadata("employees");
             console.log("Columns:", metadata.columns);
             console.log("Foreign Keys:", metadata.foreign_keys);
-
-            // Fetch employees
             var employees = dbManager.fetchEmployees();
             employeeModel.clear();
             for (var i = 0; i < employees.length; i++) {
