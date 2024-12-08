@@ -13,6 +13,7 @@ int main(int argc, char* argv[])
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
 
+    qRegisterMetaType<QList<QVariantMap>>("QList<QVariantMap>");
     qmlRegisterType<DatabaseManager>("DatabaseManager", 1, 0, "DatabaseManager");
     qmlRegisterType<DateTimeValidator>("DateTimeValidator", 1, 0, "DateTimeValidator");
 

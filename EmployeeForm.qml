@@ -50,18 +50,29 @@ Item {
                 id: employeeModel
 
             }
+      
+            
+Component.onCompleted: {
+    // Fetch employees
+    var employees = dbManager.fetchEmployees();
+        console.error(employees, employees.length);
+    if (employees) {
+        gridView.model.clear();
+        for (var i = 0; i < employees.length; i++) {
+            var employee = employees[i];
+            gridView.model.append({
+                id: employee.id,
+                first_name: employee.first_name,
+                last_name: employee.last_name,
+                position: employee.position,
+                salary: employee.salary
+            });
+        }
+    } else {
+        console.error("Failed to fetch employees");
+    }
+}
 
-            Component.onCompleted: {
-                var metadata = dbManager.getTableMetadata("employees");
-                console.log("Columns:", metadata.columns);
-                console.log("Foreign Keys:", metadata.foreign_keys);
-                var employees = dbManager.fetchEmployees();
-                gridView.model.clear();
-                for (var i = 0; i < employees.length; i++) {
-                    gridView.model.append(employees[i]);
-                    console.log("@:", employees[i].first_name);
-                }
-            }
         }
         TextField {
             id: employeeName

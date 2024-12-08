@@ -1,6 +1,7 @@
 #ifndef DATABASEMANAGER_H
 #define DATABASEMANAGER_H
 
+#include <QJsonArray>
 #include <QDateTime>
 #include <QList>
 #include <QString>
@@ -29,7 +30,8 @@ public:
                                  int salary);
     Q_INVOKABLE bool assignEmployeeToDepartment(int employeeId, int departmentId);
     Q_INVOKABLE bool deleteEmployee(int employeeId);
-    Q_INVOKABLE QList<QVariantMap> fetchEmployees();
+    Q_INVOKABLE QJsonArray fetchEmployees();
+
 
     Q_INVOKABLE QList<QVariantMap> fetchEmployeesWithDepartments();
 

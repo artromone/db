@@ -1,5 +1,6 @@
 #include <QDebug>
 #include <QFile>
+#include <QJsonObject>
 #include <QTextStream>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlError>
@@ -138,20 +139,19 @@ QList<QVariantMap> DatabaseManager::fetchEmployeesWithDepartments()
     return employees;
 }
 
-QList<QVariantMap> DatabaseManager::fetchEmployees()
+QJsonArray DatabaseManager::fetchEmployees()
 {
-    QList<QVariantMap> employees;
+    QJsonArray employees;
     QSqlQuery query("SELECT id, first_name, last_name, position, salary FROM public.emplyees");
     while (query.next())
     {
-        QVariantMap employee;
-        employee["id"] = query.value(0);
-        employee["first_name"] = query.value(1);
-        employee["last_name"] = query.value(2);
-        employee["position"] = query.value(3);
-        employee["salary"] = query.value(4);
+        QJsonObject employee;
+        employee["id"] = query.value(0).toInt();
+        employee["first_name"] = query.value(1).toString();
+        employee["last_name"] = query.value(2).toString();
+        employee["position"] = query.value(3).toString();
+        employee["salary"] = query.value(4).toDouble();
         employees.append(employee);
-        qDebug() << employee;
     }
     return employees;
 }
