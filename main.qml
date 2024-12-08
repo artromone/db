@@ -1,126 +1,125 @@
-import QtQuick 2.1 import QtQuick.Controls 2.1 import DatabaseManager 1.0
+import QtQuick 2.1
+import QtQuick.Controls 2.1
+import DatabaseManager 1.0
 
-    ApplicationWindow{id:root
+ApplicationWindow {
+    id: root
 
-                      property string statusMessage: ""
+    property string statusMessage: ""
 
-                      height: 600 title: "Database Client Application" visible: true width: 800
+    height: 600
+    title: "Database Client Application"
+    visible: true
+    width: 800
 
-                      DatabaseManager{id:dbManager
+    DatabaseManager {
+        id: dbManager
 
-} Login{id:loginPage
-
-                      anchors.fill:parent
-
-                      onLoginFailed: {logger.log("Login failed.");
-}
-onLoginSuccess:
-{
-    menuPage.visible = true;
-    visible = false;
-    logger.log("Successfully logged in.");
-}
-}
-Menuu
-{
-id:
-    menuPage
-
-        anchors.fill : parent visible : false
-
-                                        onNavigateToDepartments:
-    {
-        departmentPage.visible = true;
-        menuPage.visible = false;
     }
-onNavigateToEmployees: {
-    employeePage.visible = true;
-    menuPage.visible = false;
-}
-onNavigateToProjects: {
-    projectPage.visible = true;
-    menuPage.visible = false;
-}
-onNavigateToReports: {
-    reportPage.visible = true;
-    menuPage.visible = false;
-}
-}
-Item
-{
-id:
-    employeePage
+    Login {
+        id: loginPage
 
-        anchors.fill : parent visible : false
+        anchors.fill: parent
 
-                                        EmployeeForm
-    {
-    onNavigateBack: {
-        employeePage.visible = false;
-        menuPage.visible = true;
+        onLoginFailed: {
+            logger.log("Login failed.");
+        }
+        onLoginSuccess: {
+            menuPage.visible = true;
+            visible = false;
+            logger.log("Successfully logged in.");
+        }
     }
-    }
-}
-Item
-{
-id:
-    departmentPage
+    Menuu {
+        id: menuPage
 
-        anchors.fill : parent visible : false
+        anchors.fill: parent
+        visible: false
 
-                                        DepartmentForm
-    {
-    onNavigateBack: {
-        departmentPage.visible = false;
-        menuPage.visible = true;
+        onNavigateToDepartments: {
+            departmentPage.visible = true;
+            menuPage.visible = false;
+        }
+        onNavigateToEmployees: {
+            employeePage.visible = true;
+            menuPage.visible = false;
+        }
+        onNavigateToProjects: {
+            projectPage.visible = true;
+            menuPage.visible = false;
+        }
+        onNavigateToReports: {
+            reportPage.visible = true;
+            menuPage.visible = false;
+        }
     }
-    }
-}
-Item
-{
-id:
-    projectPage
+    Item {
+        id: employeePage
 
-        anchors.fill : parent visible : false
+        anchors.fill: parent
+        visible: false
 
-                                        ProjectForm
-    {
-    onNavigateBack: {
-        projectPage.visible = false;
-        menuPage.visible = true;
+        EmployeeForm {
+            onNavigateBack: {
+                employeePage.visible = false;
+                menuPage.visible = true;
+            }
+        }
     }
-    }
-}
-Item
-{
-id:
-    reportPage
+    Item {
+        id: departmentPage
 
-        anchors.fill : parent visible : false
+        anchors.fill: parent
+        visible: false
 
-                                        ReportView
-    {
-    onNavigateBack: {
-        reportPage.visible = false;
-        menuPage.visible = true;
+        DepartmentForm {
+            onNavigateBack: {
+                departmentPage.visible = false;
+                menuPage.visible = true;
+            }
+        }
     }
-    }
-}
-Rectangle
-{
-id:
-    messageBar
+    Item {
+        id: projectPage
 
-        anchors.bottom : parent.bottom color : "#e0e0e0" height : 40 width : parent.width
+        anchors.fill: parent
+        visible: false
 
-                                                                             Text
-    {
-        anchors.centerIn : parent text : statusMessage
+        ProjectForm {
+            onNavigateBack: {
+                projectPage.visible = false;
+                menuPage.visible = true;
+            }
+        }
     }
-}
-Logger
-{
-id:
-    logger
-}
+    Item {
+        id: reportPage
+
+        anchors.fill: parent
+        visible: false
+
+        ReportView {
+            onNavigateBack: {
+                reportPage.visible = false;
+                menuPage.visible = true;
+            }
+        }
+    }
+    Rectangle {
+        id: messageBar
+
+        anchors.bottom: parent.bottom
+        color: "#e0e0e0"
+        height: 40
+        width: parent.width
+
+        Text {
+            anchors.centerIn: parent
+            text: statusMessage
+        }
+    }
+    Logger {
+        id: logger
+
+    }
 }
