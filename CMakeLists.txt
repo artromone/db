@@ -4,7 +4,7 @@ project(MyApp LANGUAGES CXX)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 # Указываем минимально необходимую версию Qt
-find_package(Qt5 5.11 REQUIRED COMPONENTS Core Gui Quick Sql QuickControls2)
+find_package(Qt5 5.11 REQUIRED COMPONENTS Core Gui Quick Sql QuickControls2 PrintSupport)
 # Указываем путь к исходным файлам
 set(SOURCES
     main.cpp
@@ -43,6 +43,7 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Quick
     Qt5::Sql
     Qt5::QuickControls2
+    Qt5::PrintSupport
 )
 # Установка пути к ресурсам для QML
 set_target_properties(${PROJECT_NAME} PROPERTIES

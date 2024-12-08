@@ -3,10 +3,12 @@
 #include <QJsonObject>
 #include <QPainter>
 #include <QPdfWriter>
+#include <QPrinter>
+#include <QSqlDatabase>
+#include <QSqlQuery>
 #include <QSqlRecord>
 #include <QTextDocument>
 #include <QTextStream>
-#include <QTextTable>
 #include <QTextTableCell>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlError>
@@ -366,56 +368,48 @@ QVariantMap DatabaseManager::getTableMetadata(const QString& tableName)
 
 void DatabaseManager::generateReportPDF(const QString& tableName)
 {
-    QPdfWriter writer(tableName + ".pdf");
-    writer.setPageSize(QPagedPaintDevice::A4);
-    writer.setResolution(300);
-    QPainter painter(&writer);
-
-    if (!painter.isActive())
-    {
-        qWarning() << "Failed to create painter for PDF";
+    QSqlQuery query(db_);
+    if (!query.exec(QString("SELECT * FROM %1").arg(tableName))) {
+        qWarning() << "Failed to execute query:" << query.lastError().text();
         return;
     }
 
-    QFont font = painter.font();
-    font.setPointSize(12);
-    painter.setFont(font);
+    // Создание HTML-контента для PDF
+    QString htmlContent = "<html><body>";
+    htmlContent += "<h1>Отчет по таблице: " + tableName + "</h1>";
+    htmlContent += "<table border='1' cellspacing='0' cellpadding='5'>";
 
-    QSqlQuery query("SELECT * FROM " + tableName); // Пример для одной таблицы
-    int colCount = query.record().count();
-
-    QTextDocument doc;
-    QTextCursor cursor(&doc);
-
-    // Заголовки таблиц
-    QTextTableFormat tableFormat;
-    tableFormat.setBorder(1); // Добавляем рамки для таблицы
-    QTextTable* table = cursor.insertTable(1, colCount, tableFormat);
-
-    // Заполнение заголовков
-    for (int i = 0; i < colCount; i++)
+    // Добавление заголовков
+    htmlContent += "<tr>";
+    QSqlRecord record = query.record();
+    for (int i = 0; i < record.count(); ++i)
     {
-        QTextTableCell cell = table->cellAt(0, i);
-        cell.firstCursorPosition().insertText(query.record().fieldName(i));
+        htmlContent += "<th>" + record.fieldName(i) + "</th>";
     }
+    htmlContent += "</tr>";
 
-    // Заполнение данных
-    int rowIndex = 1;
+    // Добавление данных
     while (query.next())
     {
-        table->appendRows(1); // Добавление новой строки
-        for (int col = 0; col < colCount; ++col)
+        htmlContent += "<tr>";
+        for (int i = 0; i < record.count(); ++i)
         {
-            QTextTableCell cell = table->cellAt(rowIndex, col);
-            cell.firstCursorPosition().insertText(query.value(col).toString());
+            htmlContent += "<td>" + query.value(i).toString() + "</td>";
         }
-        rowIndex++;
+        htmlContent += "</tr>";
     }
 
-    // Настроим вывод документа в PDF
-    doc.setPageSize(writer.pageSizeMM());
-    doc.drawContents(&painter); // Отрисовка текста и таблицы на PDF
-    painter.end();
+    htmlContent += "</table></body></html>";
+
+    // Создание PDF
+    QPrinter printer(QPrinter::PrinterResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setPaperSize(QPrinter::A4);
+    printer.setOutputFileName(tableName + ".pdf");
+
+    QTextDocument textDocument;
+    textDocument.setHtml(htmlContent);
+    textDocument.print(&printer);
 }
 
 void DatabaseManager::generateReportTXT(const QString& tableName)
