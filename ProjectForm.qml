@@ -21,10 +21,9 @@ Item {
     }
 
     Controls1.TableView {
-
-property int activatedIdx: -1
-
         id: projectsTableView
+
+        property int activatedIdx: -1
 
         alternatingRowColors: false
         anchors.bottom: root.bottom
@@ -32,12 +31,6 @@ property int activatedIdx: -1
         anchors.top: root.top
         height: 500
         width: 700
-
-        onActivated:
-        {
-            contextMenu.popup()
-            activatedIdx = row
-        }
 
         headerDelegate: Item {
             height: 25
@@ -61,8 +54,6 @@ property int activatedIdx: -1
             Rectangle {
                 anchors.fill: parent
                 color: styleData.selected ? "black" : "white"
-
-              
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -74,6 +65,7 @@ property int activatedIdx: -1
         }
         model: ListModel {
             id: projectModel
+
         }
         rowDelegate: Rectangle {
             color: styleData.selected ? "black" : "white"
@@ -81,6 +73,10 @@ property int activatedIdx: -1
 
         Component.onCompleted: {
             updateTable();
+        }
+        onActivated: {
+            contextMenu.popup();
+            activatedIdx = row;
         }
 
         Controls1.TableViewColumn {
@@ -119,28 +115,27 @@ property int activatedIdx: -1
             width: 150
         }
     }
-
     Menu {
         id: contextMenu
 
         MenuItem {
             text: "Fill Fields"
+
             onTriggered: {
                 var selectedIndex = projectsTableView.activatedIdx;
                 if (selectedIndex !== -1) {
                     var selectedProject = projectModel.get(selectedIndex);
-                    projectId.text = selectedProject.id;
-                    projectName.text = selectedProject.name;
-                    projectCost.text = selectedProject.cost.toString();
-                    projectDepartment.text = selectedProject.department_id.toString();
-                    projectBegDate.text = selectedProject.beg_date;
-                    projectEndDate.text = selectedProject.end_date;
-                    projectEndRealDate.text = selectedProject.end_real_date;
+                    projectId.text = selectedProject.id !== undefined && selectedProject.id !== null ? selectedProject.id : '';
+                    projectName.text = selectedProject.name || '';
+                    projectCost.text = selectedProject.cost !== undefined && selectedProject.cost !== null ? selectedProject.cost.toString() : '';
+                    projectDepartment.text = selectedProject.department_id !== undefined && selectedProject.department_id !== null ? selectedProject.department_id.toString() : '';
+                    projectBegDate.text = selectedProject.beg_date || '';
+                    projectEndDate.text = selectedProject.end_date || '';
+                    projectEndRealDate.text = selectedProject.end_real_date || '';
                 }
             }
         }
     }
-
     Column {
         anchors.bottom: root.bottom
         anchors.left: projectsTableView.right
@@ -152,43 +147,56 @@ property int activatedIdx: -1
 
         TextField {
             id: projectId
+
             placeholderText: "ID"
         }
         TextField {
             id: projectName
+
             placeholderText: "Project Name"
         }
         TextField {
             id: projectCost
+
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             placeholderText: "Project Cost"
         }
         TextField {
             id: projectDepartment
+
             inputMethodHints: Qt.ImhFormattedNumbersOnly
             placeholderText: "Department ID"
         }
         TextField {
             id: projectBegDate
+
             inputMask: "99.99.9999 99:99:99"
             text: Qt.formatDateTime(new Date(), "dd.MM.yyyy HH:mm:ss")
-            validator: DateTimeValidator {}
+
+            validator: DateTimeValidator {
+            }
         }
         TextField {
             id: projectEndDate
+
             inputMask: "99.99.9999 99:99:99"
             text: Qt.formatDateTime(new Date(), "dd.MM.yyyy HH:mm:ss")
-            validator: DateTimeValidator {}
+
+            validator: DateTimeValidator {
+            }
         }
         TextField {
             id: projectEndRealDate
+
             inputMask: "99.99.9999 99:99:99"
             text: Qt.formatDateTime(new Date(), "dd.MM.yyyy HH:mm:ss")
-            validator: DateTimeValidator {}
-        }
 
+            validator: DateTimeValidator {
+            }
+        }
         Button {
             text: "Add Project"
+
             onClicked: {
                 var cost = parseInt(projectCost.text);
                 var departmentId = parseInt(projectDepartment.text);
@@ -202,12 +210,10 @@ property int activatedIdx: -1
                 updateTable();
             }
         }
-
         Button {
             text: "Update Project"
-            onClicked: {
 
-                            contextMenu.popup()
+            onClicked: {
                 var newFields = {
                     "name": projectName.text,
                     "cost": parseInt(projectCost.text),
@@ -224,9 +230,9 @@ property int activatedIdx: -1
                 updateTable();
             }
         }
-
         Button {
             text: "Delete Project"
+
             onClicked: {
                 if (dbManager.deleteProject(parseInt(projectId.text))) {
                     logger.log("Project deleted: " + parseInt(projectId.text));
@@ -236,11 +242,10 @@ property int activatedIdx: -1
                 updateTable();
             }
         }
-
         Button {
             text: "Back"
+
             onClicked: navigateBack()
         }
     }
 }
-

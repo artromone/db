@@ -26,9 +26,12 @@ public:
     // Operations with employees
     Q_INVOKABLE bool addEmployee(const QString& firstName,
                                  const QString& lastName,
+                                 const QString& fatherName,
                                  const QString& position,
                                  int salary);
-    Q_INVOKABLE bool assignEmployeeToDepartment(int employeeId, int departmentId);
+
+    Q_INVOKABLE bool updateEmployee(int id, const QVariantMap& newFields);
+    // Q_INVOKABLE bool assignEmployeeToDepartment(int employeeId, int departmentId);
     Q_INVOKABLE bool deleteEmployee(int employeeId);
     Q_INVOKABLE QJsonArray fetchEmployees();
 
@@ -53,6 +56,7 @@ signals:
     void departmentDeleted();
     void employeeAdded();
     void employeeDeleted();
+    void employeeUpdated();
     void projectAdded();
     void projectUpdated();
     void projectDeleted();

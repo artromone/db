@@ -5,8 +5,23 @@ import QtQuick.Controls 2.1
 Item {
     signal navigateBack
 
+    function updateTable() {
+        employeeTableView.visible = false;
+        var metadata = dbManager.getTableMetadata("emplyees");
+        console.log("Columns:", metadata.columns);
+        console.log("Foreign Keys:", metadata.foreign_keys);
+        var employees = dbManager.fetchEmployees();
+        employeeModel.clear();
+        for (var i = 0; i < employees.length; i++) {
+            employeeModel.append(employees[i]);
+        }
+        employeeTableView.visible = true;
+    }
+
     Controls1.TableView {
         id: employeeTableView
+
+        property int activatedIdx: -1
 
         alternatingRowColors: false
         anchors.bottom: root.bottom
@@ -41,7 +56,6 @@ Item {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 color: styleData.selected ? "white" : "black"
-                // font.family: "Monospace"
                 font.pixelSize: 13
                 text: styleData.value
                 wrapMode: Text.Wrap
@@ -56,14 +70,11 @@ Item {
         }
 
         Component.onCompleted: {
-            var metadata = dbManager.getTableMetadata("employees");
-            console.log("Columns:", metadata.columns);
-            console.log("Foreign Keys:", metadata.foreign_keys);
-            var employees = dbManager.fetchEmployees();
-            employeeModel.clear();
-            for (var i = 0; i < employees.length; i++) {
-                employeeModel.append(employees[i]);
-            }
+            updateTable();
+        }
+        onActivated: {
+            contextMenu.popup();
+            activatedIdx = row;
         }
 
         Controls1.TableViewColumn {
@@ -82,6 +93,11 @@ Item {
             width: 80
         }
         Controls1.TableViewColumn {
+            role: "fther_name"
+            title: "Father Name"
+            width: 90
+        }
+        Controls1.TableViewColumn {
             role: "position"
             title: "Position"
             width: 100
@@ -90,6 +106,25 @@ Item {
             role: "salary"
             title: "Salary"
             width: 50
+        }
+    }
+    Menu {
+        id: contextMenu
+
+        MenuItem {
+            text: "Fill Fields"
+
+            onTriggered: {
+                var selectedIndex = employeeTableView.activatedIdx;
+                if (selectedIndex !== -1) {
+                    var selectedEmployee = employeeModel.get(selectedIndex);
+                    employeeFirstName.text = selectedEmployee.first_name || '';
+                    employeeLastName.text = selectedEmployee.last_name || '';
+                    employeeFatherName.text = selectedEmployee.fther_name || '';
+                    employeePosition.text = selectedEmployee.position || '';
+                    employeeSalary.text = selectedEmployee.salary !== undefined && selectedEmployee.salary !== null ? selectedEmployee.salary.toString() : '';
+                }
+            }
         }
     }
     Column {
@@ -102,29 +137,79 @@ Item {
         spacing: 10
 
         TextField {
-            id: employeeName
+            id: employeeId
 
-            placeholderText: "Employee Name"
+            placeholderText: "ID"
+        }
+        TextField {
+            id: employeeFirstName
+
+            placeholderText: "First Name"
+        }
+        TextField {
+            id: employeeLastName
+
+            placeholderText: "Last Name"
+        }
+        TextField {
+            id: employeeFatherName
+
+            placeholderText: "Father Name"
         }
         TextField {
             id: employeePosition
 
             placeholderText: "Position"
         }
+        TextField {
+            id: employeeSalary
+
+            inputMethodHints: Qt.ImhFormattedNumbersOnly
+            placeholderText: "Salary"
+        }
         Button {
             text: "Add Employee"
 
-            onClicked: logger.log("Employee added: " + employeeName.text + ", " + employeePosition.text)
+            onClicked: {
+                var salary = parseInt(employeeSalary.text);
+                if (dbManager.addEmployee(employeeFirstName.text, employeeLastName.text, employeeFatherName.text, employeePosition.text, salary)) {
+                    logger.log("Employee added: " + employeeFirstName.text + " " + employeeLastName.text);
+                } else {
+                    logger.log("Failed to add employee");
+                }
+                updateTable();
+            }
         }
         Button {
-            text: "Edit Employee"
+            text: "Update Employee"
 
-            onClicked: logger.log("Employee edited")
+            onClicked: {
+                var newFields = {
+                    "first_name": employeeFirstName.text,
+                    "last_name": employeeLastName.text,
+                    "fther_name": employeeFatherName.text,
+                    "position": employeePosition.text,
+                    "salary": parseInt(employeeSalary.text)
+                };
+                if (dbManager.updateEmployee(parseInt(employeeId.text), newFields)) {
+                    logger.log("Employee updated: " + employeeId.text);
+                } else {
+                    logger.log("Failed to updated employee");
+                }
+                updateTable();
+            }
         }
         Button {
             text: "Delete Employee"
 
-            onClicked: logger.log("Employee deleted")
+            onClicked: {
+                if (dbManager.deleteEmployee(parseInt(employeeId.text))) {
+                    logger.log("Employee deleted: " + employeeId.text);
+                } else {
+                    logger.log("Failed to delete employee");
+                }
+                updateTable();
+            }
         }
         Button {
             text: "Back"

@@ -70,16 +70,19 @@ QList<QVariantMap> DatabaseManager::fetchDepartments()
 
 bool DatabaseManager::addEmployee(const QString& firstName,
                                   const QString& lastName,
+                                  const QString& fatherName,
                                   const QString& position,
                                   int salary)
 {
-    QString queryStr = QString(
-                           "INSERT INTO public.emplyees (first_name, last_name, position, salary) "
-                           "VALUES ('%1', '%2', '%3', %4)")
-                           .arg(firstName)
-                           .arg(lastName)
-                           .arg(position)
-                           .arg(salary);
+    QString queryStr =
+        QString(
+            "INSERT INTO public.emplyees (first_name, last_name, fther_name, position, salary) "
+            "VALUES ('%1', '%2', '%3', '%4', %5)")
+            .arg(firstName)
+            .arg(lastName)
+            .arg(fatherName)
+            .arg(position)
+            .arg(salary);
     if (executeQuery(queryStr))
     {
         emit employeeAdded();
@@ -88,21 +91,43 @@ bool DatabaseManager::addEmployee(const QString& firstName,
     return false;
 }
 
-bool DatabaseManager::assignEmployeeToDepartment(int employeeId, int departmentId)
-{
-    QSqlQuery query;
-    query.prepare(
-        "INSERT INTO public.department_employees (employee_id, department_id) "
-        "VALUES (:employee_id, :department_id)");
-    query.bindValue(":employee_id", employeeId);
-    query.bindValue(":department_id", departmentId);
+// bool DatabaseManager::assignEmployeeToDepartment(int employeeId, int departmentId)
+// {
+//     QSqlQuery query;
+//     query.prepare(
+//         "INSERT INTO public.department_employees (employee_id, department_id) "
+//         "VALUES (:employee_id, :department_id)");
+//     query.bindValue(":employee_id", employeeId);
+//     query.bindValue(":department_id", departmentId);
+//
+//     if (!query.exec())
+//     {
+//         qWarning() << "Failed to assign employee to department:" << query.lastError().text();
+//         return false;
+//     }
+//     return true;
+// }
 
-    if (!query.exec())
-    {
-        qWarning() << "Failed to assign employee to department:" << query.lastError().text();
+bool DatabaseManager::updateEmployee(int id, const QVariantMap& newFields)
+{
+    if (newFields.isEmpty())
         return false;
+
+    QStringList updateClauses;
+    for (const QString& key : newFields.keys())
+    {
+        updateClauses.append(QString("%1 = '%2'").arg(key).arg(newFields.value(key).toString()));
     }
-    return true;
+
+    QString queryStr =
+        QString("UPDATE public.emplyees SET %1 WHERE id = '%2'").arg(updateClauses.join(", ")).arg(id);
+
+    if (executeQuery(queryStr))
+    {
+        emit employeeUpdated();
+        return true;
+    }
+    return false;
 }
 
 bool DatabaseManager::deleteEmployee(int employeeId)
@@ -115,7 +140,6 @@ bool DatabaseManager::deleteEmployee(int employeeId)
     }
     return false;
 }
-
 
 QList<QVariantMap> DatabaseManager::fetchEmployeesWithDepartments()
 {
@@ -144,7 +168,8 @@ QJsonArray DatabaseManager::fetchProjects()
     QJsonArray projectsArray;
 
     QSqlQuery query(
-        "SELECT id, name, cost, department_id, beg_date, end_date, end_real_date FROM public.projects");
+        "SELECT id, name, cost, department_id, beg_date, end_date, end_real_date FROM "
+        "public.projects");
     while (query.next())
     {
         QJsonObject project;
@@ -164,15 +189,17 @@ QJsonArray DatabaseManager::fetchProjects()
 QJsonArray DatabaseManager::fetchEmployees()
 {
     QJsonArray employees;
-    QSqlQuery query("SELECT id, first_name, last_name, position, salary FROM public.emplyees");
+    QSqlQuery query(
+        "SELECT id, first_name, last_name, fther_name, position, salary FROM public.emplyees");
     while (query.next())
     {
         QJsonObject employee;
         employee["id"] = query.value(0).toInt();
         employee["first_name"] = query.value(1).toString();
         employee["last_name"] = query.value(2).toString();
-        employee["position"] = query.value(3).toString();
-        employee["salary"] = query.value(4).toDouble();
+        employee["fther_name"] = query.value(3).toString();
+        employee["position"] = query.value(4).toString();
+        employee["salary"] = query.value(5).toDouble();
         employees.append(employee);
     }
     return employees;

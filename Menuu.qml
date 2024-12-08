@@ -12,9 +12,6 @@ Item {
         spacing: 20
 
         Button {
-            text: "TABLE"
-        }
-        Button {
             text: "Manage Employees"
             width: 200
 
