@@ -1,79 +1,109 @@
 import QtQuick 2.1
+import QtQuick.Controls 1.4 as Controls1
 import QtQuick.Controls 2.1
 
 Item {
     signal navigateBack
 
+    Controls1.TableView {
+        id: employeeTableView
+
+        alternatingRowColors: false
+        anchors.bottom: root.bottom
+        anchors.left: root.left
+        anchors.top: root.top
+        height: 500
+        width: 500
+
+        headerDelegate: Item {
+            height: 25
+
+            Rectangle {
+                anchors.fill: parent
+                border.color: "gray"
+                border.width: 1
+                color: "lightgray"
+            }
+            Text {
+                anchors.fill: parent
+                anchors.margins: 5
+                color: "black"
+                elide: Text.ElideRight
+                font.pixelSize: 13
+                text: styleData.value
+            }
+        }
+        itemDelegate: Item {
+            Rectangle {
+                anchors.fill: parent
+                color: styleData.selected ? "black" : "white"
+            }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                color: styleData.selected ? "white" : "black"
+                // font.family: "Monospace"
+                font.pixelSize: 13
+                text: styleData.value
+                wrapMode: Text.Wrap
+            }
+        }
+        model: ListModel {
+            id: employeeModel
+
+        }
+        rowDelegate: Rectangle {
+            color: styleData.selected ? "black" : "white"
+        }
+
+        Component.onCompleted: {
+            // Fetch metadata
+            var metadata = dbManager.getTableMetadata("employees");
+            console.log("Columns:", metadata.columns);
+            console.log("Foreign Keys:", metadata.foreign_keys);
+
+            // Fetch employees
+            var employees = dbManager.fetchEmployees();
+            employeeModel.clear();
+            for (var i = 0; i < employees.length; i++) {
+                employeeModel.append(employees[i]);
+            }
+        }
+
+        Controls1.TableViewColumn {
+            role: "id"
+            title: "ID"
+            width: 30
+        }
+        Controls1.TableViewColumn {
+            role: "first_name"
+            title: "First Name"
+            width: 80
+        }
+        Controls1.TableViewColumn {
+            role: "last_name"
+            title: "Last Name"
+            width: 80
+        }
+        Controls1.TableViewColumn {
+            role: "position"
+            title: "Position"
+            width: 100
+        }
+        Controls1.TableViewColumn {
+            role: "salary"
+            title: "Salary"
+            width: 50
+        }
+    }
     Column {
-        anchors.centerIn: root
+        anchors.bottom: root.bottom
+        anchors.left: employeeTableView.right
+        anchors.leftMargin: 20
+        anchors.right: root.right
+        anchors.top: parent.top
+        anchors.topMargin: 20
         spacing: 10
 
-        GridView {
-            id: gridView
-
-            cellHeight: 50
-            cellWidth: 200
-            height: root.height / 2
-            width: root.width / 2
-
-            delegate: Item {
-                height: gridView.cellHeight
-                width: gridView.cellWidth
-
-                Rectangle {
-                    border.color: "gray"
-                    color: "lightgray"
-                    height: parent.height
-                    width: parent.width
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 5
-
-                        Text {
-                            font.bold: true
-                            text: "ID: " + model.id
-                        }
-                        Text {
-                            text: "Name: " + model.first_name + " " + model.last_name
-                        }
-                        Text {
-                            text: "Position: " + model.position
-                        }
-                        Text {
-                            text: "Department: " + model.department_name
-                        }
-                    }
-                }
-            }
-            model: ListModel {
-                id: employeeModel
-
-            }
-      
-            
-Component.onCompleted: {
-    // Fetch employees
-    var employees = dbManager.fetchEmployees();
-        console.error(employees, employees.length);
-    if (employees) {
-        gridView.model.clear();
-        for (var i = 0; i < employees.length; i++) {
-            var employee = employees[i];
-            gridView.model.append({
-                id: employee.id,
-                first_name: employee.first_name,
-                last_name: employee.last_name,
-                position: employee.position,
-                salary: employee.salary
-            });
-        }
-    } else {
-        console.error("Failed to fetch employees");
-    }
-}
-
-        }
         TextField {
             id: employeeName
 
