@@ -35,17 +35,26 @@ bool DatabaseManager::executeQuery(const QString& queryStr)
 
 bool DatabaseManager::addDepartment()
 {
-    QString queryStr = "INSERT INTO public.departments DEFAULT VALUES";
-    if (executeQuery(queryStr))
+    QSqlQuery query;
+    query.prepare("INSERT INTO public.departments DEFAULT VALUES RETURNING id");
+
+    if (query.exec() && query.next())
     {
+        int newId = query.value(0).toInt();
+        qDebug() << "New department added with ID:" << newId;
         emit departmentAdded();
         return true;
     }
-    return false;
+    else
+    {
+        qWarning() << "Failed to add department:" << query.lastError().text();
+        return false;
+    }
 }
 
 bool DatabaseManager::deleteDepartment(int departmentId)
 {
+    qDebug() << departmentId;
     QString queryStr = QString("DELETE FROM public.departments WHERE id = %1").arg(departmentId);
     if (executeQuery(queryStr))
     {
@@ -55,14 +64,14 @@ bool DatabaseManager::deleteDepartment(int departmentId)
     return false;
 }
 
-QList<QVariantMap> DatabaseManager::fetchDepartments()
+QJsonArray DatabaseManager::fetchDepartments()
 {
-    QList<QVariantMap> departments;
+    QJsonArray departments;
     QSqlQuery query("SELECT id FROM public.departments");
     while (query.next())
     {
-        QVariantMap department;
-        department["id"] = query.value(0);
+        QJsonObject department;
+        department["id"] = query.value(0).toInt();
         departments.append(department);
     }
     return departments;
