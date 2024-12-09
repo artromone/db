@@ -42,16 +42,21 @@ void AuthManager::provideAccessToDatabase(const QString& role)
 {
     if (role == "admin")
     {
+        rootAccess_ = true;
         qDebug() << "Providing admin access to the main database.";
     }
     else if (role == "user")
     {
+        rootAccess_ = false;
         qDebug() << "Providing limited user access to the main database.";
     }
     else
     {
-        qDebug() << "Unknown role. Access denied.";
+        rootAccess_ = false;
+        qDebug() << "Unknown role.";
     }
+
+    emit this->hasRootChanged();
 }
 
 AuthManager::AuthManager(QObject* parent)

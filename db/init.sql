@@ -120,9 +120,9 @@ SELECT
     'Project ' || gs,
     (gs % 10 + 1) * 1000,
     (gs % 100) + 1,
-    CURRENT_DATE + (gs * interval '1 day'),
-    CURRENT_DATE + ((gs + 30) * interval '1 day'),
-    CURRENT_DATE + ((gs + 30) * interval '1 day')
+    CURRENT_DATE + (gs * interval '1 day') - interval '100 days',
+    CURRENT_DATE + ((gs + 30) * interval '1 day') - interval '100 days',
+    CURRENT_DATE + ((gs + 30) * interval '1 day') - interval '100 days'
 FROM generate_series(1, 100) gs;
 
 -- Initial data for department_employees (1000 department-employee assignments)

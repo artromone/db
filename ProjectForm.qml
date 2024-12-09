@@ -139,13 +139,18 @@ Item {
         }
     }
     Column {
+        id: column
+
         anchors.bottom: root.bottom
         anchors.left: projectsTableView.right
         anchors.leftMargin: 20
         anchors.right: root.right
-        anchors.top: parent.top
+     
+        anchors.top: backBtn.bottom
+
         anchors.topMargin: 20
         spacing: 10
+        visible: authManager.hasRoot
 
         TextField {
             id: projectId
@@ -204,7 +209,8 @@ Item {
                 var departmentId = parseInt(projectDepartment.text);
                 var begDate = projectBegDate.text;
                 var endDate = projectEndDate.text;
-                if (dbManager.addProject(projectName.text, cost, departmentId, begDate, endDate)) {
+                var endRealDate = projectEndRealDate.text;
+                if (dbManager.addProject(projectName.text, cost, departmentId, begDate, endDate, endRealDate)) {
                     logger.log("Project added: " + projectName.text);
                 } else {
                     logger.log("Failed to add project");
@@ -244,10 +250,16 @@ Item {
                 updateTable();
             }
         }
-        Button {
-            text: "Back"
+    }
+    Button {
+        anchors.left: projectsTableView.right
+        anchors.leftMargin: 20
+        anchors.topMargin: 20
+            id: backBtn
+        anchors.top: root.top 
+        spacing: 10
+        text: "Back"
 
-            onClicked: navigateBack()
-        }
+        onClicked: navigateBack()
     }
 }

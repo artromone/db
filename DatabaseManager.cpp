@@ -44,12 +44,28 @@ bool DatabaseManager::executeQuery(const QString& queryStr)
 bool DatabaseManager::addDepartment()
 {
     QSqlQuery query;
-    query.prepare("INSERT INTO public.departments DEFAULT VALUES RETURNING id");
 
-    if (query.exec() && query.next())
+    query.prepare(R"(
+        SELECT COALESCE(
+            (SELECT MIN(id) + 1 FROM public.departments WHERE id + 1 NOT IN (SELECT id FROM public.departments)),
+            (SELECT MAX(id) + 1 FROM public.departments)
+        ) AS next_id
+    )");
+
+    if (!query.exec() || !query.next())
     {
-        int newId = query.value(0).toInt();
-        qDebug() << "New department added with ID:" << newId;
+        qWarning() << "Failed to retrieve next ID:" << query.lastError().text();
+        return false;
+    }
+
+    int nextId = query.value(0).toInt();
+
+    query.prepare("INSERT INTO public.departments (id) VALUES (:id)");
+    query.bindValue(":id", nextId);
+
+    if (query.exec())
+    {
+        qDebug() << "New department added with ID:" << nextId;
         emit departmentAdded();
         return true;
     }
@@ -308,12 +324,21 @@ bool DatabaseManager::deleteProject(int id)
 bool DatabaseManager::updateProject(int id, const QVariantMap& newFields)
 {
     if (newFields.isEmpty())
+    {
         return false;
+    }
 
     QStringList updateClauses;
     for (const QString& key : newFields.keys())
     {
-        updateClauses.append(QString("%1 = '%2'").arg(key).arg(newFields.value(key).toString()));
+        QString value = newFields.value(key).toString();
+
+        if (key == "beg_date" || key == "end_date" || key == "end_real_date")
+        {
+            value = QDateTime::fromString(value, "dd.MM.yyyy HH:mm:ss").toString(Qt::ISODate);
+        }
+
+        updateClauses.append(QString("%1 = '%2'").arg(key).arg(value));
     }
 
     QString queryStr =

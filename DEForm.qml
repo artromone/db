@@ -100,6 +100,7 @@ Item {
                 var selectedIndex = departmentEmployeesTableView.activatedIdx;
                 if (selectedIndex !== -1) {
                     var selectedDepartmentEmployee = departmentEmployeesModel.get(selectedIndex);
+                    departmentEmployeeId.text = selectedDepartmentEmployee.id || '';
                     departmentId.text = selectedDepartmentEmployee.department_id || '';
                     employeeId.text = selectedDepartmentEmployee.employee_id || '';
                 }
@@ -107,13 +108,18 @@ Item {
         }
     }
     Column {
+        id: column
+
         anchors.bottom: root.bottom
         anchors.left: departmentEmployeesTableView.right
         anchors.leftMargin: 20
         anchors.right: root.right
-        anchors.top: parent.top
+     
+        anchors.top: backBtn.bottom
+
         anchors.topMargin: 20
         spacing: 10
+        visible: authManager.hasRoot
 
         TextField {
             id: departmentEmployeeId
@@ -174,10 +180,16 @@ Item {
                 updateTable();
             }
         }
-        Button {
-            text: "Back"
+    }
+    Button {
+        anchors.left: departmentEmployeesTableView.right
+        anchors.leftMargin: 20
+              id: backBtn
+        anchors.top: root.top 
+        anchors.topMargin: 20
+        spacing: 10
+        text: "Back"
 
-            onClicked: navigateBack()
-        }
+        onClicked: navigateBack()
     }
 }

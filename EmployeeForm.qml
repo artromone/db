@@ -116,6 +116,7 @@ Item {
                 var selectedIndex = employeeTableView.activatedIdx;
                 if (selectedIndex !== -1) {
                     var selectedEmployee = employeeModel.get(selectedIndex);
+                    employeeId.text = selectedEmployee.id !== undefined && selectedEmployee.id !== null ? selectedEmployee.id : '';
                     employeeFirstName.text = selectedEmployee.first_name || '';
                     employeeLastName.text = selectedEmployee.last_name || '';
                     employeeFatherName.text = selectedEmployee.fther_name || '';
@@ -126,13 +127,18 @@ Item {
         }
     }
     Column {
+        id: column
+
         anchors.bottom: root.bottom
         anchors.left: employeeTableView.right
         anchors.leftMargin: 20
         anchors.right: root.right
-        anchors.top: parent.top
+
+        anchors.top: backBtn.bottom
+
         anchors.topMargin: 20
         spacing: 10
+        visible: authManager.hasRoot
 
         TextField {
             id: employeeId
@@ -209,10 +215,16 @@ Item {
                 updateTable();
             }
         }
-        Button {
-            text: "Back"
+    }
+    Button {
+        anchors.left: employeeTableView.right
+        anchors.leftMargin: 20
+        anchors.topMargin: 20
+          id: backBtn
+        anchors.top: root.top 
+        spacing: 10
+        text: "Back"
 
-            onClicked: navigateBack()
-        }
+        onClicked: navigateBack()
     }
 }

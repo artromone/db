@@ -14,8 +14,15 @@ public:
     void provideAccessToDatabase(const QString& role);
     void setUserPasswords(const QString& adminPassword, const QString& operatorPassword);
 
+    Q_PROPERTY(int hasRoot READ hasRootAccess NOTIFY hasRootChanged);
+    bool hasRootAccess() { return rootAccess_; };
+
+signals:
+    void hasRootChanged();
+
 private:
     QSqlDatabase db_;
+    bool rootAccess_;
 };
 
 #endif // AUTHMANAGER_H

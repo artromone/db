@@ -96,13 +96,16 @@ Item {
         }
     }
     Column {
+        id: column
+
         anchors.bottom: root.bottom
         anchors.left: departmentTableView.right
         anchors.leftMargin: 20
         anchors.right: root.right
-        anchors.top: parent.top
+        anchors.top: backBtn.bottom
         anchors.topMargin: 20
         spacing: 10
+        visible: authManager.hasRoot
 
         TextField {
             id: departmentId
@@ -133,10 +136,16 @@ Item {
                 updateTable();
             }
         }
-        Button {
-            text: "Back"
+    }
+    Button {
+        id: backBtn
+        anchors.top: root.top
+        anchors.left: departmentTableView.right
+        anchors.leftMargin: 20
+        anchors.topMargin: 20
+        spacing: 10
+        text: "Back"
 
-            onClicked: navigateBack()
-        }
+        onClicked: navigateBack()
     }
 }
