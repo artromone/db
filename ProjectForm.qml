@@ -7,6 +7,37 @@ import QtQuick.Controls 1.4 as Controls1
 Item {
     signal navigateBack
 
+    function formatDate(isoDateString) {
+    if (!isoDateString) return '';
+    
+    try {
+        var date = new Date(isoDateString);
+        
+        // Функция для добавления ведущих нулей
+        function pad(number) {
+            return (number < 10 ? '0' : '') + number;
+        }
+        
+        // Получаем компоненты даты
+        var day = pad(date.getDate());
+        var month = pad(date.getMonth() + 1);
+        var year = date.getFullYear();
+        
+        // Получаем компоненты времени
+        var hours = pad(date.getHours());
+        var minutes = pad(date.getMinutes());
+        var seconds = pad(date.getSeconds());
+        var milliseconds = date.getMilliseconds();
+        // Для миллисекунд используем особую логику
+        milliseconds = (milliseconds < 10 ? '00' : (milliseconds < 100 ? '0' : '')) + milliseconds;
+        
+        // Формируем строку в требуемом формате
+        return day + '.' + month + '.' + year + ' ' + hours + ':' + minutes + ':' + seconds + ':' + milliseconds;
+    } catch (error) {
+        console.error("Ошибка преобразования даты:", error);
+        return '';
+    }
+}
     function updateTable() {
         projectsTableView.visible = false;
         var projects = dbManager.fetchProjects();
@@ -104,7 +135,7 @@ Item {
         Controls1.TableViewColumn {
             role: "end_date"
             title: "End Date"
-            width: 150
+            width: 160
         }
         Controls1.TableViewColumn {
             role: "end_real_date"
@@ -126,9 +157,9 @@ Item {
                     projectName.text = selectedProject.name || '';
                     projectCost.text = selectedProject.cost !== undefined && selectedProject.cost !== null ? selectedProject.cost.toString() : '';
                     projectDepartment.text = selectedProject.department_id !== undefined && selectedProject.department_id !== null ? selectedProject.department_id.toString() : '';
-                    projectBegDate.text = selectedProject.beg_date || '';
-                    projectEndDate.text = selectedProject.end_date || '';
-                    projectEndRealDate.text = selectedProject.end_real_date || '';
+                    projectBegDate.text = formatDate(selectedProject.beg_date) || '';
+                    projectEndDate.text = formatDate(selectedProject.end_date) || '';
+                    projectEndRealDate.text = formatDate(selectedProject.end_real_date) || '';
                 }
             }
         }
@@ -145,9 +176,7 @@ Item {
         anchors.left: projectsTableView.right
         anchors.leftMargin: 20
         anchors.right: root.right
-     
         anchors.top: backBtn.bottom
-
         anchors.topMargin: 20
         spacing: 10
         visible: authManager.hasRoot
@@ -252,11 +281,12 @@ Item {
         }
     }
     Button {
+        id: backBtn
+
         anchors.left: projectsTableView.right
         anchors.leftMargin: 20
+        anchors.top: root.top
         anchors.topMargin: 20
-            id: backBtn
-        anchors.top: root.top 
         spacing: 10
         text: "Back"
 

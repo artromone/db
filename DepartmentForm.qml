@@ -25,7 +25,7 @@ Item {
         anchors.left: root.left
         anchors.top: root.top
         height: 500
-        width: 500
+        width: 200
 
         headerDelegate: Item {
             height: 25
@@ -139,9 +139,10 @@ Item {
     }
     Button {
         id: backBtn
-        anchors.top: root.top
+
         anchors.left: departmentTableView.right
         anchors.leftMargin: 20
+        anchors.top: root.top
         anchors.topMargin: 20
         spacing: 10
         text: "Back"

@@ -25,7 +25,7 @@ Item {
         anchors.left: root.left
         anchors.top: root.top
         height: 500
-        width: 500
+        width: 400
 
         headerDelegate: Item {
             height: 25
@@ -114,9 +114,7 @@ Item {
         anchors.left: departmentEmployeesTableView.right
         anchors.leftMargin: 20
         anchors.right: root.right
-     
         anchors.top: backBtn.bottom
-
         anchors.topMargin: 20
         spacing: 10
         visible: authManager.hasRoot
@@ -182,10 +180,11 @@ Item {
         }
     }
     Button {
+        id: backBtn
+
         anchors.left: departmentEmployeesTableView.right
         anchors.leftMargin: 20
-              id: backBtn
-        anchors.top: root.top 
+        anchors.top: root.top
         anchors.topMargin: 20
         spacing: 10
         text: "Back"

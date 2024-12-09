@@ -133,9 +133,7 @@ Item {
         anchors.left: employeeTableView.right
         anchors.leftMargin: 20
         anchors.right: root.right
-
         anchors.top: backBtn.bottom
-
         anchors.topMargin: 20
         spacing: 10
         visible: authManager.hasRoot
@@ -217,11 +215,12 @@ Item {
         }
     }
     Button {
+        id: backBtn
+
         anchors.left: employeeTableView.right
         anchors.leftMargin: 20
+        anchors.top: root.top
         anchors.topMargin: 20
-          id: backBtn
-        anchors.top: root.top 
         spacing: 10
         text: "Back"
 
