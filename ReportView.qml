@@ -12,10 +12,10 @@ Item {
             text: "Generate TXT Report"
 
             onClicked: {
-                dbManager.generateReportTXT("projects");
-                dbManager.generateReportTXT("emplyees");
-                dbManager.generateReportTXT("departments");
-                dbManager.generateReportTXT("department_employees");
+                dbManager.generateReportTXT("goods");
+                dbManager.generateReportTXT("sales");
+                dbManager.generateReportTXT("warehouse1");
+                dbManager.generateReportTXT("warehouse2");
                 logger.log("TXT Report generated");
             }
         }
@@ -23,10 +23,10 @@ Item {
             text: "Generate PDF Report"
 
             onClicked: {
-                dbManager.generateReportPDF("projects");
-                dbManager.generateReportPDF("emplyees");
-                dbManager.generateReportPDF("departments");
-                dbManager.generateReportPDF("department_employees");
+                 dbManager.generateReportPDF("goods");
+                dbManager.generateReportPDF("sales");
+                dbManager.generateReportPDF("warehouse1");
+                dbManager.generateReportPDF("warehouse2");
                 logger.log("PDF Report generated");
             }
         }

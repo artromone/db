@@ -4,10 +4,10 @@
         <file>Login.qml</file>
         <file>Menuu.qml</file>
         <file>Logger.qml</file>
-        <file>EmployeeForm.qml</file>
-        <file>DepartmentForm.qml</file>
-        <file>DEForm.qml</file>
-        <file>ProjectForm.qml</file>
+        <file>GoodForm.qml</file>
+        <file>WarehouseForm.qml</file>
+        <file>Warehouse2Form.qml</file>
+        <file>SalesForm.qml</file>
         <file>ReportView.qml</file>
     </qresource>
 </RCC>

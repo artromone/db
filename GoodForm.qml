@@ -1,22 +1,22 @@
 import QtQuick 2.1
-import QtQuick.Controls 1.4 as Controls1
 import QtQuick.Controls 2.1
+import QtQuick.Controls 1.4 as Controls1
 
 Item {
     signal navigateBack
 
     function updateTable() {
-        departmentEmployeesTableView.visible = false;
-        var departmentEmployees = dbManager.fetchDepartmentEmployees();
-        departmentEmployeesModel.clear();
-        for (var i = 0; i < departmentEmployees.length; i++) {
-            departmentEmployeesModel.append(departmentEmployees[i]);
+        goodsTableView.visible = false;
+        var goods = dbManager.fetchGoods();
+        goodsModel.clear();
+        for (var i = 0; i < goods.length; i++) {
+            goodsModel.append(goods[i]);
         }
-        departmentEmployeesTableView.visible = true;
+        goodsTableView.visible = true;
     }
 
     Controls1.TableView {
-        id: departmentEmployeesTableView
+        id: goodsTableView
 
         property int activatedIdx: -1
 
@@ -25,7 +25,7 @@ Item {
         anchors.left: root.left
         anchors.top: root.top
         height: 500
-        width: 400
+        width: 500
 
         headerDelegate: Item {
             height: 25
@@ -45,6 +45,7 @@ Item {
                 text: styleData.value
             }
         }
+        
         itemDelegate: Item {
             Rectangle {
                 anchors.fill: parent
@@ -58,10 +59,11 @@ Item {
                 wrapMode: Text.Wrap
             }
         }
+        
         model: ListModel {
-            id: departmentEmployeesModel
-
+            id: goodsModel
         }
+        
         rowDelegate: Rectangle {
             color: styleData.selected ? "black" : "white"
         }
@@ -69,6 +71,7 @@ Item {
         Component.onCompleted: {
             updateTable();
         }
+        
         onActivated: {
             contextMenu.popup();
             activatedIdx = row;
@@ -80,16 +83,17 @@ Item {
             width: 50
         }
         Controls1.TableViewColumn {
-            role: "department_id"
-            title: "Department ID"
-            width: 100
+            role: "name"
+            title: "Name"
+            width: 200
         }
         Controls1.TableViewColumn {
-            role: "employee_id"
-            title: "Employee ID"
+            role: "priority"
+            title: "Priority"
             width: 100
         }
     }
+
     Menu {
         id: contextMenu
 
@@ -97,21 +101,26 @@ Item {
             text: "Fill Fields"
 
             onTriggered: {
-                var selectedIndex = departmentEmployeesTableView.activatedIdx;
+                var selectedIndex = goodsTableView.activatedIdx;
                 if (selectedIndex !== -1) {
-                    var selectedDepartmentEmployee = departmentEmployeesModel.get(selectedIndex);
-                    departmentEmployeeId.text = selectedDepartmentEmployee.id || '';
-                    departmentId.text = selectedDepartmentEmployee.department_id || '';
-                    employeeId.text = selectedDepartmentEmployee.employee_id || '';
+                    var selectedGood = goodsModel.get(selectedIndex);
+                    goodId.text = selectedGood.id !== undefined && selectedGood.id !== null 
+                        ? selectedGood.id 
+                        : '';
+                    goodName.text = selectedGood.name || '';
+                    goodPriority.text = selectedGood.priority !== undefined && selectedGood.priority !== null 
+                        ? selectedGood.priority 
+                        : '';
                 }
             }
         }
     }
+
     Column {
         id: column
 
         anchors.bottom: root.bottom
-        anchors.left: departmentEmployeesTableView.right
+        anchors.left: goodsTableView.right
         anchors.leftMargin: 20
         anchors.right: root.right
         anchors.top: backBtn.bottom
@@ -120,69 +129,90 @@ Item {
         visible: authManager.hasRoot
 
         TextField {
-            id: departmentEmployeeId
-
+            id: goodId
             placeholderText: "ID"
         }
-        TextField {
-            id: departmentId
 
-            inputMethodHints: Qt.ImhFormattedNumbersOnly
-            placeholderText: "Department ID"
-        }
         TextField {
-            id: employeeId
-
-            inputMethodHints: Qt.ImhFormattedNumbersOnly
-            placeholderText: "Employee ID"
+            id: goodName
+            placeholderText: "Good Name"
+            width: parent.width
         }
+
+        TextField {
+            id: goodPriority
+            placeholderText: "Priority (optional)"
+            inputMethodHints: Qt.ImhFormattedNumbersOnly
+            width: parent.width
+        }
+
         Button {
-            text: "Add Department Employee"
+            text: "Add Good"
 
             onClicked: {
-                var depId = parseInt(departmentId.text);
-                var empId = parseInt(employeeId.text);
-                if (dbManager.addDepartmentEmployee(depId, empId)) {
-                    logger.log("Department Employee added: Department " + depId + ", Employee " + empId);
-                } else {
-                    logger.log("Failed to add Department Employee");
+                var name = goodName.text.trim();
+                var priority = goodPriority.text ? parseInt(goodPriority.text) : -1;
+                
+                if (name === "") {
+                    return;
                 }
-                updateTable();
+
+                if (dbManager.addGood(name, priority)) {
+                    logger.log("Good added: " + name);
+                    updateTable();
+                    // Clear fields after successful addition
+                    goodName.text = "";
+                    goodPriority.text = "";
+                }
             }
         }
+
         Button {
-            text: "Update Department Employee"
+            text: "Update Good"
 
             onClicked: {
+                var id = parseInt(goodId.text);
+                if (isNaN(id)) {
+                    return;
+                }
+
                 var newFields = {
-                    "department_id": parseInt(departmentId.text),
-                    "employee_id": parseInt(employeeId.text)
+                    "name": goodName.text,
+                    "priority": goodPriority.text ? parseInt(goodPriority.text) : null
                 };
-                if (dbManager.updateDepartmentEmployee(parseInt(departmentEmployeeId.text), newFields)) {
-                    logger.log("Department Employee updated: " + departmentEmployeeId.text);
-                } else {
-                    logger.log("Failed to update Department Employee");
+
+                if (dbManager.updateGood(id, newFields)) {
+                    logger.log("Good updated: " + id);
+                    updateTable();
                 }
-                updateTable();
             }
         }
+
         Button {
-            text: "Delete Department Employee"
+            text: "Delete Good"
 
             onClicked: {
-                if (dbManager.deleteDepartmentEmployee(parseInt(departmentEmployeeId.text))) {
-                    logger.log("Department Employee deleted: " + departmentEmployeeId.text);
-                } else {
-                    logger.log("Failed to delete Department Employee");
+                var id = parseInt(goodId.text);
+                if (isNaN(id)) {
+                    return;
                 }
-                updateTable();
+
+                if (dbManager.deleteGood(id)) {
+                    logger.log("Good deleted: " + id);
+                    updateTable();
+                    // Clear fields after deletion
+                    goodId.text = "";
+                    goodName.text = "";
+                    goodPriority.text = "";
+                }
             }
         }
     }
+
     Button {
         id: backBtn
 
-        anchors.left: departmentEmployeesTableView.right
+        anchors.left: goodsTableView.right
         anchors.leftMargin: 20
         anchors.top: root.top
         anchors.topMargin: 20

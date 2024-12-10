@@ -1,134 +1,151 @@
--- public.departments definition
-DROP TABLE IF EXISTS public.departments;
-CREATE TABLE public.departments (
-    id serial4 NOT NULL,
-    CONSTRAINT departments_pk PRIMARY KEY (id)
+-- Table: public.goods
+DROP TABLE IF EXISTS public.goods;
+CREATE TABLE IF NOT EXISTS public.goods (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    priority INT
 );
 
--- public.emplyees definition
-DROP TABLE IF EXISTS public.emplyees;
-CREATE TABLE public.emplyees (
-    first_name varchar(20) NULL,
-    last_name varchar(20) NULL,
-    fther_name varchar(20) NULL,
-    "position" varchar(20) NULL,
-    salary int4 NULL,
-    id serial4 NOT NULL,
-    CONSTRAINT emplyees_pk PRIMARY KEY (id)
+-- Table: public.sales
+DROP TABLE IF EXISTS public.sales;
+CREATE TABLE IF NOT EXISTS public.sales (
+    id SERIAL PRIMARY KEY,
+    good_id INT NOT NULL,
+    good_count INT NOT NULL,
+    create_date DATE DEFAULT CURRENT_DATE,
+    CONSTRAINT fk_sales_goods FOREIGN KEY (good_id) REFERENCES public.goods (id)
 );
 
--- public.projects definition
-DROP TABLE IF EXISTS public.projects;
-CREATE TABLE public.projects (
-    "name" varchar(20) NULL,
-    "cost" int4 NULL,
-    department_id int4 NULL,
-    id serial4 NOT NULL,
-    beg_date timestamp NULL,
-    end_date timestamp NULL,
-    end_real_date timestamp NULL,
-    CONSTRAINT projects_pk PRIMARY KEY (id),
-    CONSTRAINT projects_departments_fk FOREIGN KEY (department_id) REFERENCES public.departments(id) ON DELETE CASCADE
+-- Table: public.warehouse1
+DROP TABLE IF EXISTS public.warehouse1;
+CREATE TABLE IF NOT EXISTS public.warehouse1 (
+    id SERIAL PRIMARY KEY,
+    good_id INT NOT NULL,
+    good_count INT NOT NULL,
+    CONSTRAINT fk_warehouse1_goods FOREIGN KEY (good_id) REFERENCES public.goods (id)
 );
 
--- public.department_employees definition
-DROP TABLE IF EXISTS public.department_employees;
-CREATE TABLE public.department_employees (
-    department_id int4 NOT NULL,
-    employee_id int4 NOT NULL,
-    id serial4 NOT NULL,
-    CONSTRAINT department_employees_pk PRIMARY KEY (id),
-    CONSTRAINT department_employees_departments_fk FOREIGN KEY (department_id) REFERENCES public.departments(id) ON DELETE CASCADE,
-    CONSTRAINT department_employees_emplyees_fk FOREIGN KEY (employee_id) REFERENCES public.emplyees(id) ON DELETE CASCADE
+-- Table: public.warehouse2
+DROP TABLE IF EXISTS public.warehouse2;
+CREATE TABLE IF NOT EXISTS public.warehouse2 (
+    id SERIAL PRIMARY KEY,
+    good_id INT NOT NULL,
+    good_count INT NOT NULL,
+    CONSTRAINT fk_warehouse2_goods FOREIGN KEY (good_id) REFERENCES public.goods (id)
 );
 
--- Table Triggers
-create function prevent_duplicate_employee() returns trigger as $$
-begin
-    if exists(select 1 from public.department_employees where department_id = new.department_id and employee_id = new.employee_id) then
-        raise exception 'Duplicate employee in the department';
-    end if;
-    return new;
-end;
-$$ language plpgsql;
+-- Function: delete_unused_goods
+CREATE OR REPLACE FUNCTION delete_unused_goods()
+RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM goods
+    WHERE id NOT IN (
+        SELECT DISTINCT good_id FROM sales
+        WHERE create_date >= CURRENT_DATE - INTERVAL '6 months'
+    );
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
 
-create trigger trg_prevent_duplicate_employee before insert
-    on public.department_employees for each row execute function prevent_duplicate_employee();
+-- Trigger: delete_unused_goods_trigger
+CREATE OR REPLACE TRIGGER delete_unused_goods_trigger
+AFTER INSERT OR UPDATE ON sales
+FOR EACH STATEMENT
+EXECUTE FUNCTION delete_unused_goods();
 
-create function prevent_delete_employee_with_low_salary() returns trigger as $$
-begin
-    if old.salary < 1000 then
-        raise exception 'Cannot delete employee with salary below 1000';
-    end if;
-    return old;
-end;
-$$ language plpgsql;
+-- Function: check_links
+CREATE OR REPLACE FUNCTION check_links()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM sales WHERE sales.good_id = OLD.id) THEN
+        RAISE EXCEPTION 'Еще есть заявки на товар';
+    END IF;
 
-create trigger trg_prevent_delete_low_salary_employee before delete
-    on public.emplyees for each row execute function prevent_delete_employee_with_low_salary();
+    IF EXISTS (SELECT 1 FROM warehouse1 WHERE warehouse1.good_id = OLD.id) THEN
+        RAISE EXCEPTION 'Товар лежит на 1 складе';
+    END IF;
 
-create function prevent_invalid_project_dates() returns trigger as $$
-begin
-    if new.end_date < new.beg_date then
-        raise exception 'End date cannot be before the start date';
-    end if;
-    return new;
-end;
-$$ language plpgsql;
+    IF EXISTS (SELECT 1 FROM warehouse2 WHERE warehouse2.good_id = OLD.id) THEN
+        RAISE EXCEPTION 'Товар лежит на 2 складе';
+    END IF;
 
-create trigger trg_prevent_invalid_project_dates before update
-    on public.projects for each row execute function prevent_invalid_project_dates();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-create function prevent_delete_incomplete_project() returns trigger as $$
-begin
-    if old.end_real_date is null then
-        raise exception 'Cannot delete an incomplete project';
-    end if;
-    return old;
-end;
-$$ language plpgsql;
+-- Trigger: check_links
+CREATE OR REPLACE TRIGGER check_links
+BEFORE DELETE ON goods
+FOR EACH STATEMENT
+EXECUTE FUNCTION check_links();
 
-create trigger trg_prevent_delete_incomplete_project before delete
-    on public.projects for each row execute function prevent_delete_incomplete_project();
+-- Function: use_cache_dummy
+CREATE OR REPLACE FUNCTION use_cache_dummy()
+RETURNS TRIGGER AS $$
+DECLARE
+    wh1_has_good BOOLEAN;
+BEGIN
+    SELECT EXISTS (
+        SELECT 1 FROM warehouse1 WHERE warehouse1.good_id = NEW.good_id
+    ) INTO wh1_has_good;
 
--- Initial data for departments (100 departments)
-INSERT INTO public.departments (id) 
-SELECT generate_series(1, 100);
+    IF wh1_has_good AND OLD.good_count > NEW.good_count THEN
+        RAISE EXCEPTION 'На первом складе есть этот товар';
+    END IF;
 
--- Initial data for employees (100 employees)
-INSERT INTO public.emplyees (first_name, last_name, fther_name, "position", salary) 
-SELECT
-    'First' || gs, 
-    'Last' || gs, 
-    'Father' || gs, 
-    CASE 
-        WHEN gs % 3 = 0 THEN 'Manager' 
-        WHEN gs % 3 = 1 THEN 'Engineer' 
-        ELSE 'Technician' 
-    END,
-    CASE 
-        WHEN gs % 4 = 0 THEN 1000
-        WHEN gs % 4 = 1 THEN 1500
-        WHEN gs % 4 = 2 THEN 2000
-        ELSE 2500
-    END
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger: use_cache_dummy
+CREATE OR REPLACE TRIGGER use_cache_dummy
+BEFORE UPDATE ON warehouse2
+FOR EACH ROW
+EXECUTE FUNCTION use_cache_dummy();
+
+-- Function: prevent_low_inventory_insert
+CREATE OR REPLACE FUNCTION prevent_low_inventory_insert()
+RETURNS TRIGGER AS $$
+DECLARE
+    stock1 INT;
+    stock2 INT;
+BEGIN
+    SELECT COALESCE(wh1.good_count, 0) INTO stock1
+    FROM warehouse1 wh1 WHERE wh1.good_id = NEW.good_id;
+
+    SELECT COALESCE(wh2.good_count, 0) INTO stock2
+    FROM warehouse2 wh2 WHERE wh2.good_id = NEW.good_id;
+
+    IF NEW.good_count > stock1 + stock2 THEN
+        RAISE EXCEPTION 'Недостаточно товара на складе для выполнения заказа';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger: prevent_low_inventory_insert
+CREATE OR REPLACE TRIGGER prevent_low_inventory_insert
+BEFORE INSERT ON sales
+FOR EACH ROW
+EXECUTE FUNCTION prevent_low_inventory_insert();
+
+-- Initial data for goods (100 goods)
+INSERT INTO public.goods (name, priority)
+SELECT 'Good ' || gs, gs % 10 + 1
 FROM generate_series(1, 100) gs;
 
--- Initial data for projects (100 projects)
-INSERT INTO public.projects ("name", "cost", department_id, beg_date, end_date, end_real_date) 
-SELECT
-    'Project ' || gs,
-    (gs % 10 + 1) * 1000,
-    (gs % 100) + 1,
-    CURRENT_DATE + (gs * interval '1 day') - interval '100 days',
-    CURRENT_DATE + ((gs + 30) * interval '1 day') - interval '100 days',
-    CURRENT_DATE + ((gs + 30) * interval '1 day') - interval '100 days'
+-- Initial data for sales (100 sales entries)
+INSERT INTO public.sales (good_id, good_count, create_date)
+SELECT (gs % 100) + 1, (gs % 50) + 1, CURRENT_DATE - (gs * interval '1 day')
 FROM generate_series(1, 100) gs;
 
--- Initial data for department_employees (1000 department-employee assignments)
-INSERT INTO public.department_employees (department_id, employee_id)
-SELECT DISTINCT
-    (gs % 100) + 1 AS department_id, 
-    ((gs * 17) % 100) + 1 AS employee_id
-FROM generate_series(1, 1000) gs
-ON CONFLICT DO NOTHING;
+-- Initial data for warehouse1 (50 goods in warehouse1)
+INSERT INTO public.warehouse1 (good_id, good_count)
+SELECT (gs % 100) + 1, (gs % 20) + 10
+FROM generate_series(1, 50) gs;
+
+-- Initial data for warehouse2 (50 goods in warehouse2)
+INSERT INTO public.warehouse2 (good_id, good_count)
+SELECT (gs % 100) + 1, (gs % 15) + 5
+FROM generate_series(51, 100) gs;

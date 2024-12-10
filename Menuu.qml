@@ -2,50 +2,49 @@ import QtQuick 2.1
 import QtQuick.Controls 2.1
 
 Item {
-    signal navigateToDE
-    signal navigateToDepartments
-    signal navigateToEmployees
-    signal navigateToProjects
+    signal navigateToGoods
+    signal navigateToWarehouse
+    signal navigateToWarehouse2
+    signal navigateToSales 
     signal navigateToReports
 
     Column {
         anchors.centerIn: parent
         spacing: 20
 
-        Button {
-            text: "Manage Employees"
+         Button {
+            text: "Manage Warehouse2"
             width: 200
 
             onClicked: {
-                logger.log("Navigate to EmployeeForm");
-                navigateToEmployees();
+                logger.log("Navigate to WarehouseForm2");
+                navigateToWarehouse2();
+            }
+        }       Button {
+            text: "Manage Warehouse"
+            width: 200
+
+            onClicked: {
+                logger.log("Navigate to WarehouseForm");
+                navigateToWarehouse();
             }
         }
         Button {
-            text: "Manage Departments"
+            text: "Manage Goods"
             width: 200
 
             onClicked: {
-                logger.log("Navigate to DepartmentForm");
-                navigateToDepartments();
+                logger.log("Navigate to GoodForm");
+                navigateToGoods();
             }
         }
         Button {
-            text: "Manage Department/Employees"
+            text: "Manage Sales"
             width: 200
 
             onClicked: {
-                logger.log("Navigate to DEForm");
-                navigateToDE();
-            }
-        }
-        Button {
-            text: "Manage Projects"
-            width: 200
-
-            onClicked: {
-                logger.log("Navigate to ProjectForm");
-                navigateToProjects();
+                logger.log("Navigate to Sales");
+                navigateToSales();
             }
         }
         Button {

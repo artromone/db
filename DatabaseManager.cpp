@@ -40,62 +40,91 @@ bool DatabaseManager::executeQuery(const QString& queryStr)
     }
     return true;
 }
-
-bool DatabaseManager::addDepartment()
+QJsonArray DatabaseManager::fetchWarehouseItems()
 {
-    QSqlQuery query;
+    QJsonArray warehouseArray;
+    QSqlQuery query(
+        "SELECT w.id, w.good_id, g.name as good_name, w.good_count "
+        "FROM warehouse1 w "
+        "JOIN goods g ON w.good_id = g.id "
+        "ORDER BY w.id");
 
-    query.prepare(R"(
-        SELECT COALESCE(
-            (SELECT MIN(id) + 1 FROM public.departments WHERE id + 1 NOT IN (SELECT id FROM public.departments)),
-            (SELECT MAX(id) + 1 FROM public.departments)
-        ) AS next_id
-    )");
-
-    if (!query.exec() || !query.next())
+    while (query.next())
     {
-        qWarning() << "Failed to retrieve next ID:" << query.lastError().text();
-        return false;
+        QJsonObject warehouseItem;
+        warehouseItem["id"] = query.value("id").toInt();
+        warehouseItem["good_id"] = query.value("good_id").toInt();
+        warehouseItem["good_name"] = query.value("good_name").toString();
+        warehouseItem["good_count"] = query.value("good_count").toInt();
+        warehouseArray.append(warehouseItem);
     }
-
-    int nextId = query.value(0).toInt();
-
-    query.prepare("INSERT INTO public.departments (id) VALUES (:id)");
-    query.bindValue(":id", nextId);
-
-    if (query.exec())
-    {
-        qDebug() << "New department added with ID:" << nextId;
-        emit departmentAdded();
-        return true;
-    }
-    else
-    {
-        qWarning() << "Failed to add department:" << query.lastError().text();
-        return false;
-    }
+    return warehouseArray;
 }
 
-Q_INVOKABLE bool DatabaseManager::addDepartmentEmployee(int departmentId, int employeeId)
+QJsonArray DatabaseManager::fetchAvailableGoods()
 {
-    QString queryStr = QString(
-                           "INSERT INTO public.department_employees (department_id, employee_id) "
-                           "VALUES (%1, %2)")
-                           .arg(departmentId)
-                           .arg(employeeId);
+    QJsonArray availableGoodsArray;
+    QSqlQuery query(
+        "SELECT id, name FROM goods "
+        "WHERE id NOT IN (SELECT DISTINCT good_id FROM warehouse1) "
+        "ORDER BY name");
+
+    while (query.next())
+    {
+        QJsonObject good;
+        good["id"] = query.value("id").toInt();
+        good["name"] = query.value("name").toString();
+        availableGoodsArray.append(good);
+    }
+    return availableGoodsArray;
+}
+
+bool DatabaseManager::addWarehouseItem(int goodId, int goodCount)
+{
+    // Validate input
+    if (goodId <= 0 || goodCount < 0)
+    {
+        return false;
+    }
+
+    // Check if good exists
+    QSqlQuery checkGood;
+    checkGood.prepare("SELECT id FROM goods WHERE id = :goodId");
+    checkGood.bindValue(":goodId", goodId);
+
+    if (!checkGood.exec() || !checkGood.next())
+    {
+        return false; // Good does not exist
+    }
+
+    // Check if good is already in warehouse
+    QSqlQuery checkWarehouse;
+    checkWarehouse.prepare("SELECT id FROM warehouse1 WHERE good_id = :goodId");
+    checkWarehouse.bindValue(":goodId", goodId);
+
+    if (checkWarehouse.exec() && checkWarehouse.next())
+    {
+        return false; // Good already in warehouse
+    }
+
+    QString queryStr =
+        QString("INSERT INTO public.warehouse1 (good_id, good_count) VALUES (%1, %2)")
+            .arg(goodId)
+            .arg(goodCount);
 
     if (executeQuery(queryStr))
     {
-        emit departmentEmployeeAdded();
         return true;
     }
     return false;
 }
 
-Q_INVOKABLE bool DatabaseManager::updateDepartmentEmployee(int id, const QVariantMap& newFields)
+bool DatabaseManager::updateWarehouseItem(int id, const QVariantMap& newFields)
 {
     if (newFields.isEmpty())
+    {
         return false;
+    }
 
     QStringList updateClauses;
     for (const QString& key : newFields.keys())
@@ -103,225 +132,159 @@ Q_INVOKABLE bool DatabaseManager::updateDepartmentEmployee(int id, const QVarian
         updateClauses.append(QString("%1 = %2").arg(key).arg(newFields.value(key).toInt()));
     }
 
-    QString queryStr = QString("UPDATE public.department_employees SET %1 WHERE id = %2")
-                           .arg(updateClauses.join(", "))
-                           .arg(id);
-
-    if (executeQuery(queryStr))
-    {
-        emit departmentEmployeeUpdated();
-        return true;
-    }
-    return false;
-}
-
-Q_INVOKABLE bool DatabaseManager::deleteDepartmentEmployee(int departmentEmployeeId)
-{
     QString queryStr =
-        QString("DELETE FROM public.department_employees WHERE id = %1").arg(departmentEmployeeId);
+        QString("UPDATE warehouse1 SET %1 WHERE id = %2").arg(updateClauses.join(", ")).arg(id);
 
     if (executeQuery(queryStr))
     {
-        emit departmentEmployeeDeleted();
         return true;
     }
     return false;
 }
 
-Q_INVOKABLE QJsonArray DatabaseManager::fetchDepartmentEmployees()
+bool DatabaseManager::deleteWarehouseItem(int id)
 {
-    QJsonArray departmentEmployees;
-    QSqlQuery query("SELECT id, department_id, employee_id FROM public.department_employees");
-
+    QString queryStr = QString("DELETE FROM warehouse1 WHERE id = %1").arg(id);
+    if (executeQuery(queryStr))
+    {
+        return true;
+    }
+    return false;
+}
+QJsonArray DatabaseManager::fetchGoods()
+{
+    QJsonArray goodsArray;
+    QSqlQuery query("SELECT id, name, priority FROM public.goods ORDER BY id");
     while (query.next())
     {
-        QJsonObject departmentEmployee;
-        departmentEmployee["id"] = query.value(0).toInt();
-        departmentEmployee["department_id"] = query.value(1).toInt();
-        departmentEmployee["employee_id"] = query.value(2).toInt();
-        departmentEmployees.append(departmentEmployee);
+        QJsonObject good;
+        good["id"] = query.value("id").toInt();
+        good["name"] = query.value("name").toString();
+        good["priority"] =
+            query.value("priority").isNull() ? QJsonValue::Null : query.value("priority").toInt();
+        goodsArray.append(good);
     }
-    return departmentEmployees;
+    return goodsArray;
 }
 
-bool DatabaseManager::deleteDepartment(int departmentId)
+bool DatabaseManager::addGood(const QString& name, int priority)
 {
-    qDebug() << departmentId;
-    QString queryStr = QString("DELETE FROM public.departments WHERE id = %1").arg(departmentId);
+    // Validate input
+    if (name.trimmed().isEmpty())
+    {
+        return false;
+    }
+
+    QString queryStr;
+    if (priority != -1)
+    {
+        queryStr =
+            QString("INSERT INTO public.goods (name, priority) VALUES ('%1', %2)").arg(name).arg(priority);
+    }
+    else
+    {
+        queryStr = QString("INSERT INTO public.goods (name) VALUES ('%1')").arg(name);
+    }
+
     if (executeQuery(queryStr))
     {
-        emit departmentDeleted();
         return true;
     }
     return false;
 }
 
-QJsonArray DatabaseManager::fetchDepartments()
-{
-    QJsonArray departments;
-    QSqlQuery query("SELECT id FROM public.departments");
-    while (query.next())
-    {
-        QJsonObject department;
-        department["id"] = query.value(0).toInt();
-        departments.append(department);
-    }
-    return departments;
-}
-
-bool DatabaseManager::addEmployee(const QString& firstName,
-                                  const QString& lastName,
-                                  const QString& fatherName,
-                                  const QString& position,
-                                  int salary)
-{
-    QString queryStr =
-        QString(
-            "INSERT INTO public.emplyees (first_name, last_name, fther_name, position, salary) "
-            "VALUES ('%1', '%2', '%3', '%4', %5)")
-            .arg(firstName)
-            .arg(lastName)
-            .arg(fatherName)
-            .arg(position)
-            .arg(salary);
-    if (executeQuery(queryStr))
-    {
-        emit employeeAdded();
-        return true;
-    }
-    return false;
-}
-
-// bool DatabaseManager::assignEmployeeToDepartment(int employeeId, int departmentId)
-// {
-//     QSqlQuery query;
-//     query.prepare(
-//         "INSERT INTO public.department_employees (employee_id, department_id) "
-//         "VALUES (:employee_id, :department_id)");
-//     query.bindValue(":employee_id", employeeId);
-//     query.bindValue(":department_id", departmentId);
-//
-//     if (!query.exec())
-//     {
-//         qWarning() << "Failed to assign employee to department:" << query.lastError().text();
-//         return false;
-//     }
-//     return true;
-// }
-
-bool DatabaseManager::updateEmployee(int id, const QVariantMap& newFields)
+bool DatabaseManager::updateGood(int id, const QVariantMap& newFields)
 {
     if (newFields.isEmpty())
+    {
         return false;
+    }
 
     QStringList updateClauses;
     for (const QString& key : newFields.keys())
     {
-        updateClauses.append(QString("%1 = '%2'").arg(key).arg(newFields.value(key).toString()));
+        QVariant value = newFields.value(key);
+        if (value.isNull())
+        {
+            updateClauses.append(QString("%1 = NULL").arg(key));
+        }
+        else
+        {
+            updateClauses.append(QString("%1 = '%2'").arg(key).arg(value.toString()));
+        }
     }
 
     QString queryStr =
-        QString("UPDATE public.emplyees SET %1 WHERE id = '%2'").arg(updateClauses.join(", ")).arg(id);
+        QString("UPDATE goods SET %1 WHERE id = '%2'").arg(updateClauses.join(", ")).arg(id);
 
     if (executeQuery(queryStr))
     {
-        emit employeeUpdated();
         return true;
     }
     return false;
 }
 
-bool DatabaseManager::deleteEmployee(int employeeId)
+bool DatabaseManager::deleteGood(int id)
 {
-    QString queryStr = QString("DELETE FROM public.emplyees WHERE id = %1").arg(employeeId);
+    // Check for references in sales and warehouse before deletion
+    QSqlQuery checkSales, checkWarehouse;
+
+    checkSales.prepare("SELECT COUNT(*) FROM sales WHERE good_id = :goodId");
+    checkSales.bindValue(":goodId", id);
+
+    checkWarehouse.prepare("SELECT COUNT(*) FROM warehouse1 WHERE good_id = :goodId");
+    checkWarehouse.bindValue(":goodId", id);
+
+    if (checkSales.exec() && checkSales.next() && checkSales.value(0).toInt() > 0)
+    {
+        return false; // Good is referenced in sales
+    }
+
+    if (checkWarehouse.exec() && checkWarehouse.next() && checkWarehouse.value(0).toInt() > 0)
+    {
+        return false; // Good is in warehouse
+    }
+
+    QString queryStr = QString("DELETE FROM goods WHERE id = '%1'").arg(id);
     if (executeQuery(queryStr))
     {
-        emit employeeDeleted();
         return true;
     }
     return false;
 }
 
-QJsonArray DatabaseManager::fetchProjects()
+QJsonArray DatabaseManager::fetchWarehouse2Items()
 {
-    QJsonArray projectsArray;
+    QJsonArray warehouseArray;
+    QSqlQuery query("SELECT id, good_id, good_count FROM public.warehouse2");
 
-    QSqlQuery query(
-        "SELECT id, name, cost, department_id, beg_date, end_date, end_real_date FROM "
-        "public.projects");
     while (query.next())
     {
-        QJsonObject project;
-        project["id"] = query.value("id").toInt();
-        project["name"] = query.value("name").toString();
-        project["cost"] = query.value("cost").toDouble();
-        project["department_id"] = query.value("department_id").toInt();
-        project["beg_date"] = query.value("beg_date").toString().split("T")[0];
-        project["end_date"] = query.value("end_date").toString().split("T")[0];
-        project["end_real_date"] = query.value("end_real_date").toString().split("T")[0];
-        projectsArray.append(project);
+        QJsonObject warehouseItem;
+        warehouseItem["id"] = query.value("id").toInt();
+        warehouseItem["good_id"] = query.value("good_id").toInt();
+        warehouseItem["good_count"] = query.value("good_count").toInt();
+        warehouseArray.append(warehouseItem);
     }
-
-    return projectsArray;
+    return warehouseArray;
 }
 
-QJsonArray DatabaseManager::fetchEmployees()
+bool DatabaseManager::addWarehouse2Item(int goodId, int goodCount)
 {
-    QJsonArray employees;
-    QSqlQuery query(
-        "SELECT id, first_name, last_name, fther_name, position, salary FROM public.emplyees");
-    while (query.next())
-    {
-        QJsonObject employee;
-        employee["id"] = query.value(0).toInt();
-        employee["first_name"] = query.value(1).toString();
-        employee["last_name"] = query.value(2).toString();
-        employee["fther_name"] = query.value(3).toString();
-        employee["position"] = query.value(4).toString();
-        employee["salary"] = query.value(5).toDouble();
-        employees.append(employee);
-    }
-    return employees;
-}
+    QString queryStr = QString(
+                           "INSERT INTO public.warehouse2 (good_id, good_count) "
+                           "VALUES (%1, %2)")
+                           .arg(goodId)
+                           .arg(goodCount);
 
-bool DatabaseManager::addProject(const QString& name,
-                                 int cost,
-                                 int departmentId,
-                                 const QString& begDate,
-                                 const QString& endDate,
-                                 const QString& endRealDate)
-{
-    QString queryStr =
-        QString(
-            "INSERT INTO public.projects (name, cost, department_id, beg_date, "
-            "end_date, end_real_date) VALUES ('%1', %2, %3, '%4', '%5', '%6')")
-            .arg(name)
-            .arg(cost)
-            .arg(departmentId)
-            .arg(QDateTime::fromString(begDate, "dd.MM.yyyy").toString(Qt::ISODate))
-            .arg(QDateTime::fromString(endDate, "dd.MM.yyyy").toString(Qt::ISODate))
-            .arg(QDateTime::fromString(endRealDate, "dd.MM.yyyy").toString(Qt::ISODate));
     if (executeQuery(queryStr))
     {
-        emit projectAdded();
         return true;
     }
     return false;
 }
 
-bool DatabaseManager::deleteProject(int id)
-{
-    QString queryStr = QString("DELETE FROM projects WHERE id = '%1'").arg(id);
-
-    if (executeQuery(queryStr))
-    {
-        emit projectDeleted();
-        return true;
-    }
-    return false;
-}
-
-bool DatabaseManager::updateProject(int id, const QVariantMap& newFields)
+bool DatabaseManager::updateWarehouse2Item(int id, const QVariantMap& newFields)
 {
     if (newFields.isEmpty())
     {
@@ -332,21 +295,25 @@ bool DatabaseManager::updateProject(int id, const QVariantMap& newFields)
     for (const QString& key : newFields.keys())
     {
         QString value = newFields.value(key).toString();
-
-        if (key == "beg_date" || key == "end_date" || key == "end_real_date")
-        {
-            value = QDateTime::fromString(value, "dd.MM.yyyy").toString(Qt::ISODate);
-        }
-
-        updateClauses.append(QString("%1 = '%2'").arg(key).arg(value));
+        updateClauses.append(QString("%1 = %2").arg(key).arg(value));
     }
 
     QString queryStr =
-        QString("UPDATE projects SET %1 WHERE id = '%2'").arg(updateClauses.join(", ")).arg(id);
+        QString("UPDATE warehouse2 SET %1 WHERE id = %2").arg(updateClauses.join(", ")).arg(id);
 
     if (executeQuery(queryStr))
     {
-        emit projectUpdated();
+        return true;
+    }
+    return false;
+}
+
+bool DatabaseManager::deleteWarehouse2Item(int id)
+{
+    QString queryStr = QString("DELETE FROM warehouse2 WHERE id = %1").arg(id);
+
+    if (executeQuery(queryStr))
+    {
         return true;
     }
     return false;
@@ -417,64 +384,74 @@ QJsonArray DatabaseManager::getTableMetadata(const QString& tableName)
     return metadataArray;
 }
 
-double DatabaseManager::calculateProjectProfit(int projectId)
+QJsonArray DatabaseManager::fetchSales()
 {
-    QSqlQuery projectQuery;
-    projectQuery.prepare(
-        "SELECT name, cost, beg_date, end_date, end_real_date, department_id FROM public.projects "
-        "WHERE id = :id");
-    projectQuery.bindValue(":id", projectId);
-
-    if (!projectQuery.exec() || !projectQuery.next())
+    QJsonArray salesArray;
+    QSqlQuery query("SELECT id, good_id, good_count, create_date FROM public.sales");
+    while (query.next())
     {
-        qWarning() << "Project not found or query failed";
-        return 0.0;
+        QJsonObject sale;
+        sale["id"] = query.value("id").toInt();
+        sale["good_id"] = query.value("good_id").toInt();
+        sale["good_count"] = query.value("good_count").toInt();
+        sale["create_date"] = query.value("create_date").toString().split("T")[0];
+        salesArray.append(sale);
     }
-
-    QString name = projectQuery.value("name").toString();
-    double projectCost = projectQuery.value("cost").toDouble();
-    QDate begDate = QDate::fromString(projectQuery.value("beg_date").toString(), Qt::ISODate);
-    QDate endDate = QDate::fromString(projectQuery.value("end_date").toString(), Qt::ISODate);
-    QDate endRealDate =
-        QDate::fromString(projectQuery.value("end_real_date").toString(), Qt::ISODate);
-    int departmentId = projectQuery.value("department_id").toInt();
-
-    bool isProjectCompleted = !endRealDate.isNull() && endRealDate <= QDate::currentDate();
-
-    QSqlQuery employeesQuery;
-    employeesQuery.prepare(
-        "SELECT SUM(e.salary) as total_salary "
-        "FROM public.emplyees e "
-        "JOIN public.department_employees de ON e.id = de.employee_id "
-        "WHERE de.department_id = :department_id");
-    employeesQuery.bindValue(":department_id", departmentId);
-
-    double totalSalary = 0.0;
-    if (employeesQuery.exec() && employeesQuery.next())
-    {
-        totalSalary = employeesQuery.value("total_salary").toDouble();
-    }
-
-    // Расчет длительности проекта в месяцах
-    endDate = isProjectCompleted ? endRealDate : endDate;
-    int projectMonths = (endDate.year() - begDate.year()) * 12 + (endDate.month() - begDate.month());
-
-    // Расчет общих затрат на зарплаты за период проекта
-    double totalLaborCost = totalSalary * projectMonths;
-
-    // Расчет прибыли
-    double profit = projectCost - totalLaborCost;
-
-    // Возвращаем особые значения для незавершенных проектов
-    if (!isProjectCompleted)
-    {
-        // Возвращаем отрицательное значение для незавершенных проектов
-        return -1 * totalLaborCost;
-    }
-
-    return profit;
+    return salesArray;
 }
 
+bool DatabaseManager::addSale(int goodId, int goodCount, const QString& createDate)
+{
+    QString queryStr =
+        QString("INSERT INTO public.sales (good_id, good_count, create_date) VALUES (%1, %2, '%3')")
+            .arg(goodId)
+            .arg(goodCount)
+            .arg(QDateTime::fromString(createDate, "dd.MM.yyyy").toString(Qt::ISODate));
+
+    if (executeQuery(queryStr))
+    {
+        return true;
+    }
+    return false;
+}
+
+bool DatabaseManager::updateSale(int id, const QVariantMap& newFields)
+{
+    if (newFields.isEmpty())
+    {
+        return false;
+    }
+
+    QStringList updateClauses;
+    for (const QString& key : newFields.keys())
+    {
+        QString value = newFields.value(key).toString();
+        if (key == "create_date")
+        {
+            value = QDateTime::fromString(value, "dd.MM.yyyy").toString(Qt::ISODate);
+        }
+        updateClauses.append(QString("%1 = '%2'").arg(key).arg(value));
+    }
+
+    QString queryStr =
+        QString("UPDATE sales SET %1 WHERE id = '%2'").arg(updateClauses.join(", ")).arg(id);
+
+    if (executeQuery(queryStr))
+    {
+        return true;
+    }
+    return false;
+}
+
+bool DatabaseManager::deleteSale(int id)
+{
+    QString queryStr = QString("DELETE FROM sales WHERE id = '%1'").arg(id);
+    if (executeQuery(queryStr))
+    {
+        return true;
+    }
+    return false;
+}
 void DatabaseManager::generateReportPDF(const QString& tableName)
 {
     QSqlQuery query(db_);

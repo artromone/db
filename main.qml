@@ -36,20 +36,19 @@ ApplicationWindow {
         anchors.fill: parent
         visible: false
 
-        onNavigateToDE: {
-            dePage.visible = true;
+        onNavigateToGoods: {
+            goodPage.visible = true;
             menuPage.visible = false;
         }
-        onNavigateToDepartments: {
-            departmentPage.visible = true;
+         onNavigateToWarehouse2: {
+            warehouse2Page.visible = true;
+            menuPage.visible = false;
+        }       onNavigateToWarehouse: {
+            warehousePage.visible = true;
             menuPage.visible = false;
         }
-        onNavigateToEmployees: {
-            employeePage.visible = true;
-            menuPage.visible = false;
-        }
-        onNavigateToProjects: {
-            projectPage.visible = true;
+        onNavigateToSales: {
+            salesPage.visible = true;
             menuPage.visible = false;
         }
         onNavigateToReports: {
@@ -57,54 +56,53 @@ ApplicationWindow {
             menuPage.visible = false;
         }
     }
-    Item {
-        id: employeePage
 
+    Item {
+        id: warehouse2Page
         anchors.fill: parent
         visible: false
 
-        EmployeeForm {
+        Warehouse2Form {
             onNavigateBack: {
-                employeePage.visible = false;
+                warehouse2Page.visible = false;
                 menuPage.visible = true;
             }
         }
     }
     Item {
-        id: dePage
-
+        id: warehousePage
         anchors.fill: parent
         visible: false
 
-        DEForm {
+        WarehouseForm {
             onNavigateBack: {
-                dePage.visible = false;
+                warehousePage.visible = false;
                 menuPage.visible = true;
             }
         }
     }
     Item {
-        id: departmentPage
+        id: goodPage
 
         anchors.fill: parent
         visible: false
 
-        DepartmentForm {
+        GoodForm {
             onNavigateBack: {
-                departmentPage.visible = false;
+                goodPage.visible = false;
                 menuPage.visible = true;
             }
         }
     }
     Item {
-        id: projectPage
+        id: salesPage
 
         anchors.fill: parent
         visible: false
 
-        ProjectForm {
+        SalesForm {
             onNavigateBack: {
-                projectPage.visible = false;
+                salesPage.visible = false;
                 menuPage.visible = true;
             }
         }
