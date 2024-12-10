@@ -256,9 +256,9 @@ QJsonArray DatabaseManager::fetchProjects()
         project["name"] = query.value("name").toString();
         project["cost"] = query.value("cost").toDouble();
         project["department_id"] = query.value("department_id").toInt();
-        project["beg_date"] = query.value("beg_date").toString();
-        project["end_date"] = query.value("end_date").toString();
-        project["end_real_date"] = query.value("end_real_date").toString();
+        project["beg_date"] = query.value("beg_date").toString().split("T")[0];
+        project["end_date"] = query.value("end_date").toString().split("T")[0];
+        project["end_real_date"] = query.value("end_real_date").toString().split("T")[0];
         projectsArray.append(project);
     }
 
@@ -298,9 +298,9 @@ bool DatabaseManager::addProject(const QString& name,
             .arg(name)
             .arg(cost)
             .arg(departmentId)
-            .arg(QDateTime::fromString(begDate, "dd.MM.yyyy HH:mm:ss").toString(Qt::ISODate))
-            .arg(QDateTime::fromString(endDate, "dd.MM.yyyy HH:mm:ss").toString(Qt::ISODate))
-            .arg(QDateTime::fromString(endRealDate, "dd.MM.yyyy HH:mm:ss").toString(Qt::ISODate));
+            .arg(QDateTime::fromString(begDate, "dd.MM.yyyy").toString(Qt::ISODate))
+            .arg(QDateTime::fromString(endDate, "dd.MM.yyyy").toString(Qt::ISODate))
+            .arg(QDateTime::fromString(endRealDate, "dd.MM.yyyy").toString(Qt::ISODate));
     if (executeQuery(queryStr))
     {
         emit projectAdded();
@@ -335,7 +335,7 @@ bool DatabaseManager::updateProject(int id, const QVariantMap& newFields)
 
         if (key == "beg_date" || key == "end_date" || key == "end_real_date")
         {
-            value = QDateTime::fromString(value, "dd.MM.yyyy HH:mm:ss").toString(Qt::ISODate);
+            value = QDateTime::fromString(value, "dd.MM.yyyy").toString(Qt::ISODate);
         }
 
         updateClauses.append(QString("%1 = '%2'").arg(key).arg(value));

@@ -24,15 +24,16 @@ Item {
         var year = date.getFullYear();
         
         // Получаем компоненты времени
-        var hours = pad(date.getHours());
-        var minutes = pad(date.getMinutes());
-        var seconds = pad(date.getSeconds());
-        var milliseconds = date.getMilliseconds();
+        // var hours = pad(date.getHours());
+        // var minutes = pad(date.getMinutes());
+        // var seconds = pad(date.getSeconds());
+        // var milliseconds = date.getMilliseconds();
         // Для миллисекунд используем особую логику
-        milliseconds = (milliseconds < 10 ? '00' : (milliseconds < 100 ? '0' : '')) + milliseconds;
+        // milliseconds = (milliseconds < 10 ? '00' : (milliseconds < 100 ? '0' : '')) + milliseconds;
         
         // Формируем строку в требуемом формате
-        return day + '.' + month + '.' + year + ' ' + hours + ':' + minutes + ':' + seconds + ':' + milliseconds;
+        // return day + '.' + month + '.' + year + ' ' + hours + ':' + minutes + ':' + seconds + ':' + milliseconds;
+        return day + '.' + month + '.' + year;
     } catch (error) {
         console.error("Ошибка преобразования даты:", error);
         return '';
@@ -58,7 +59,7 @@ Item {
         anchors.left: root.left
         anchors.top: root.top
         height: 500
-        width: 700
+        width: 500
 
         headerDelegate: Item {
             height: 25
@@ -125,22 +126,22 @@ Item {
         Controls1.TableViewColumn {
             role: "department_id"
             title: "Department ID"
-            width: 100
+            width: 35
         }
         Controls1.TableViewColumn {
             role: "beg_date"
             title: "Begin Date"
-            width: 160
+            width: 80
         }
         Controls1.TableViewColumn {
             role: "end_date"
             title: "End Date"
-            width: 160
+            width: 80
         }
         Controls1.TableViewColumn {
             role: "end_real_date"
             title: "End Real Date"
-            width: 150
+            width: 80
         }
     }
     Menu {
@@ -206,8 +207,8 @@ Item {
         TextField {
             id: projectBegDate
 
-            inputMask: "99.99.9999 99:99:99"
-            text: Qt.formatDateTime(new Date(), "dd.MM.yyyy HH:mm:ss")
+            inputMask: "99.99.9999"
+            text: Qt.formatDateTime(new Date(), "dd.MM.yyyy")
 
             validator: DateTimeValidator {
             }
@@ -215,8 +216,8 @@ Item {
         TextField {
             id: projectEndDate
 
-            inputMask: "99.99.9999 99:99:99"
-            text: Qt.formatDateTime(new Date(), "dd.MM.yyyy HH:mm:ss")
+            inputMask: "99.99.9999"
+            text: Qt.formatDateTime(new Date(), "dd.MM.yyyy")
 
             validator: DateTimeValidator {
             }
@@ -224,8 +225,8 @@ Item {
         TextField {
             id: projectEndRealDate
 
-            inputMask: "99.99.9999 99:99:99"
-            text: Qt.formatDateTime(new Date(), "dd.MM.yyyy HH:mm:ss")
+            inputMask: "99.99.9999"
+            text: Qt.formatDateTime(new Date(), "dd.MM.yyyy")
 
             validator: DateTimeValidator {
             }

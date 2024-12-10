@@ -6,7 +6,7 @@ DateTimeValidator::DateTimeValidator() : QValidator()
 
 QValidator::State DateTimeValidator::validate(QString& input, int& pos) const
 {
-    QDateTime dt = QDateTime::fromString(input, "dd.mm.yyyy HH:mm:ss");
+    QDateTime dt = QDateTime::fromString(input, "dd.mm.yyyy");
     if (dt.isNull())
     {
         return QValidator::Invalid;
