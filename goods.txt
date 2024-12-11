@@ -16,8 +16,10 @@ id	name	priority
 13	Good 13	4	
 14	Good 14	5	
 15	Good 15	6	
+16	Good 16	7	
 17	Good 17	8	
 18	Good 18	9	
+19	Good 19	10	
 20	Good 20	1	
 21	Good 21	2	
 22	Good 22	3	
@@ -99,7 +101,3 @@ id	name	priority
 98	Good 98	9	
 99	Good 99	10	
 100	Good 100	1	
-16	Good 1!	7	
-19	Good 19777	10	
-101	Good 19777	10	
-102	Good 17	8	

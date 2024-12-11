@@ -7,6 +7,7 @@ ApplicationWindow {
 
     property string statusMessage: ""
 
+    color: "black"
     height: 700
     title: "Database Client Application"
     visible: true
@@ -40,25 +41,26 @@ ApplicationWindow {
             goodPage.visible = true;
             menuPage.visible = false;
         }
-         onNavigateToWarehouse2: {
-            warehouse2Page.visible = true;
-            menuPage.visible = false;
-        }       onNavigateToWarehouse: {
-            warehousePage.visible = true;
+        onNavigateToReports: {
+            reportPage.visible = true;
             menuPage.visible = false;
         }
         onNavigateToSales: {
             salesPage.visible = true;
             menuPage.visible = false;
         }
-        onNavigateToReports: {
-            reportPage.visible = true;
+        onNavigateToWarehouse: {
+            warehousePage.visible = true;
+            menuPage.visible = false;
+        }
+        onNavigateToWarehouse2: {
+            warehouse2Page.visible = true;
             menuPage.visible = false;
         }
     }
-
     Item {
         id: warehouse2Page
+
         anchors.fill: parent
         visible: false
 
@@ -71,6 +73,7 @@ ApplicationWindow {
     }
     Item {
         id: warehousePage
+
         anchors.fill: parent
         visible: false
 
@@ -118,19 +121,6 @@ ApplicationWindow {
                 reportPage.visible = false;
                 menuPage.visible = true;
             }
-        }
-    }
-    Rectangle {
-        id: messageBar
-
-        anchors.bottom: parent.bottom
-        color: "#e0e0e0"
-        height: 40
-        width: parent.width
-
-        Text {
-            anchors.centerIn: parent
-            text: statusMessage
         }
     }
     Logger {
