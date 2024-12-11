@@ -34,24 +34,24 @@ CREATE TABLE IF NOT EXISTS public.warehouse2 (
     CONSTRAINT fk_warehouse2_goods FOREIGN KEY (good_id) REFERENCES public.goods (id)
 );
 
--- Function: delete_unused_goods
-CREATE OR REPLACE FUNCTION delete_unused_goods()
-RETURNS TRIGGER AS $$
-BEGIN
-    DELETE FROM goods
-    WHERE id NOT IN (
-        SELECT DISTINCT good_id FROM sales
-        WHERE create_date >= CURRENT_DATE - INTERVAL '6 months'
-    );
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
+-- -- Function: delete_unused_goods
+-- CREATE OR REPLACE FUNCTION delete_unused_goods()
+-- RETURNS TRIGGER AS $$
+-- BEGIN
+--     DELETE FROM goods
+--     WHERE id NOT IN (
+--         SELECT DISTINCT good_id FROM sales
+--         WHERE create_date >= CURRENT_DATE - INTERVAL '6 months'
+--     );
+--     RETURN NULL;
+-- END;
+-- $$ LANGUAGE plpgsql;
 
--- Trigger: delete_unused_goods_trigger
-CREATE OR REPLACE TRIGGER delete_unused_goods_trigger
-AFTER INSERT OR UPDATE ON sales
-FOR EACH STATEMENT
-EXECUTE FUNCTION delete_unused_goods();
+-- -- Trigger: delete_unused_goods_trigger
+-- CREATE OR REPLACE TRIGGER delete_unused_goods_trigger
+-- AFTER INSERT OR UPDATE ON sales
+-- FOR EACH STATEMENT
+-- EXECUTE FUNCTION delete_unused_goods();
 
 -- Function: check_links
 CREATE OR REPLACE FUNCTION check_links()
